@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
-	"test/internal/api"
+	"test/internal/router"
 
 	_ "github.com/lib/pq"
 )
@@ -27,7 +27,7 @@ func main() {
 	//api.DropTables(db)
 	//api.CreateTables(db)
 
-	router := api.CreateRouter(db)
+	r := router.CreateRouter(db)
 
-	log.Fatal(api.RunServer(":8080", router))
+	log.Fatal(router.RunServer(":8080", r))
 }

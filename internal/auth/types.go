@@ -1,4 +1,4 @@
-package lib
+package auth
 
 type UserCreate struct {
 	KT        string `json:"kt"`
