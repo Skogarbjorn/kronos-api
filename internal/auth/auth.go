@@ -186,13 +186,14 @@ func ColdStartPin(
 		return nil, err
 	}
 
-	var response AuthResponse
-	var tokens Tokens
-	tokens.Token = accessToken
-	tokens.RefreshToken = refreshToken
-	response.Message = "Login successful"
-	response.Tokens = tokens
-	response.User = user
+	response := AuthResponse{
+		Message: "Login successful",
+		User: user,
+		Tokens: Tokens{
+			AccessToken: *accessToken,
+			RefreshToken: *refreshToken,
+		},
+	}
 
 	tx.Commit()
 
@@ -237,9 +238,10 @@ func RefreshTokens(
 
 	tx.Commit()
 
-	var tokens Tokens
-	tokens.RefreshToken = refresh
-	tokens.Token = access
+	tokens := Tokens{
+		AccessToken: *access,
+		RefreshToken: *refresh,
+	}
 
 	return &tokens, nil
 }
@@ -298,9 +300,10 @@ func WarmStartPin(
 
 	tx.Commit()
 
-	var tokens Tokens
-	tokens.RefreshToken = refreshToken
-	tokens.Token = accessToken
+	tokens := Tokens{
+		AccessToken: *accessToken,
+		RefreshToken: *refreshToken,
+	}
 
 	return &tokens, nil
 }
@@ -311,7 +314,7 @@ func rotateTokens(
 	user_id int,
 	device_id string,
 	old_token_id int,
-) (string, string, error) {
+) (*AccessToken, *RefreshToken, error) {
 	_, err := tx.ExecContext(
 		ctx,
 		`
@@ -320,7 +323,7 @@ func rotateTokens(
 		old_token_id,
 	)
 	if err != nil {
-		return "", "", fmt.Errorf("rotateTokens: %w", err)
+		return nil, nil, fmt.Errorf("rotateTokens: %w", err)
 	}
 
 	access, _ := createAccessToken(user_id)
@@ -330,19 +333,20 @@ func rotateTokens(
 
 func createAccessToken(
 	user_id int,
-) (string, error) {
+) (*AccessToken, error) {
+	expiresAt := time.Now().Add(time.Hour).Unix()
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"sub": user_id,
-			"exp": time.Now().Add(time.Hour).Unix(),
-	})
+			"exp": 	expiresAt,
+		})
 
 	accessTokenString, err := accessToken.SignedString([]byte("todo! create env and set secret"))
 	if err != nil {
-		return "", fmt.Errorf("createAccessToken: sign jwt: %w", err)
+		return nil, fmt.Errorf("createAccessToken: sign jwt: %w", err)
 	}
 
-	return accessTokenString, nil
+	return &AccessToken{ Token: accessTokenString, ExpiresAt: expiresAt }, nil
 }
 
 func createRefreshToken(
@@ -350,10 +354,10 @@ func createRefreshToken(
 	tx *sql.Tx,
 	user_id int,
 	device_id string,
-) (string, error) {
+) (*RefreshToken, error) {
 	token, err := generateRefreshToken()
 	if err != nil {
-		return "", fmt.Errorf("createRefreshToken: gen: %w", err)
+		return nil, fmt.Errorf("createRefreshToken: gen: %w", err)
 	}
 
 	tokenHash := hashToken(token)
@@ -374,10 +378,11 @@ func createRefreshToken(
 		tokenHash,
 	)
 	if err != nil {
-		return "", fmt.Errorf("createRefreshToken: db insert: %w", err)
+		return nil, fmt.Errorf("createRefreshToken: db insert: %w", err)
 	}
 
-	return token, nil
+	expiresAt := time.Now().Add(time.Hour * 12).Unix()
+	return &RefreshToken{ Token: token, ExpiresAt: expiresAt }, nil
 }
 
 func generateRefreshToken() (string, error) {

@@ -22,8 +22,17 @@ type UserSilentRefresh struct {
 }
 
 type Tokens struct {
-	RefreshToken string `json:"refresh_token"`
+	AccessToken AccessToken `json:"access_token"`
+	RefreshToken RefreshToken `json:"refresh_token"`
+}
+
+type RefreshToken struct {
 	Token string `json:"token"`
+	ExpiresAt int64 `json:"expires_at"`
+}
+type AccessToken struct {
+	Token string `json:"token"`
+	ExpiresAt int64 `json:"expires_at"`
 }
 
 type UserReAuth struct {
