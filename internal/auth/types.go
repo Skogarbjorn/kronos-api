@@ -1,5 +1,7 @@
 package auth
 
+import "github.com/golang-jwt/jwt/v5"
+
 type UserCreate struct {
 	KT        string `json:"kt"`
 	FirstName string `json:"first_name"`
@@ -57,4 +59,9 @@ type AuthResponse struct {
 	Message string `json:"message"`
 	Tokens  Tokens `json:"tokens"`
 	User    User   `json:"user"`
+}
+
+type Claims struct {
+	Auth string `json:"auth"`
+	jwt.RegisteredClaims
 }

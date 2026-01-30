@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -177,7 +178,7 @@ func ColdStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, err := createAccessToken(user.ID)
+	accessToken, err := createAccessToken(user.ID, "pin")
 	if err != nil {
 		return nil, err
 	}
@@ -326,18 +327,20 @@ func rotateTokens(
 		return nil, nil, fmt.Errorf("rotateTokens: %w", err)
 	}
 
-	access, _ := createAccessToken(user_id)
+	access, _ := createAccessToken(user_id, "pin")
 	refresh, _ := createRefreshToken(ctx, tx, user_id, device_id)
 	return access, refresh, nil
 }
 
 func createAccessToken(
 	user_id int,
+	auth string,
 ) (*AccessToken, error) {
 	expiresAt := time.Now().Add(time.Hour).Unix()
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"sub": user_id,
+			"sub": strconv.Itoa(user_id),
+			"auth": auth,
 			"exp": 	expiresAt,
 		})
 
