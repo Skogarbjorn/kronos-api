@@ -2,16 +2,13 @@ package router
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"test/internal/auth"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func CreateRouter(db *sql.DB) http.Handler {
@@ -60,21 +57,13 @@ func checkhealthHandler(_ *sql.DB) http.HandlerFunc {
 
 func pinAuthTestHandler(_ *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		auth := r.Header.Get("Authorization")
-		if auth == "" {
+		authorization := r.Header.Get("Authorization")
+		if authorization == "" {
 			http.Error(w, "missing Authorization header", http.StatusBadRequest)
 			return
 		}
 
-		parts := strings.SplitN(auth, " ", 2)
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "invalid Authorization header format", http.StatusBadRequest)
-			return
-		}
-
-		token := parts[1]
-
-		claims, err := parseToken(token, []byte("todo! create env and set secret"))
+		claims, err := auth.ExtractAndParseToken(authorization)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -83,25 +72,3 @@ func pinAuthTestHandler(_ *sql.DB) http.HandlerFunc {
 	}
 }
 
-func parseToken(tokenStr string, secret []byte) (*auth.Claims, error) {
-	token, err := jwt.ParseWithClaims(
-		tokenStr,
-		&auth.Claims{},
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return secret, nil
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*auth.Claims)
-	if !ok || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	return claims, nil
-}
