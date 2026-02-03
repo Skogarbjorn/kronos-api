@@ -17,3 +17,15 @@ func CreateCompanyHandler(db *sql.DB) http.HandlerFunc {
 func CreateLocationHandler(db *sql.DB) http.HandlerFunc {
 	return abstractions.CreateJSONHandler(db, CreateLocation)
 }
+
+func CreateTaskHandler(db *sql.DB) http.HandlerFunc {
+	return abstractions.CreateJSONHandler(db, CreateTask)
+}
+
+func CreateEmploymentHandler(db *sql.DB) http.HandlerFunc {
+	return abstractions.CreateJSONHandler(db, CreateEmployment)
+}
+
+func CreateContractHandler(db *sql.DB) http.HandlerFunc {
+	return abstractions.CreateJSONHandler(db, CreateContract)
+}

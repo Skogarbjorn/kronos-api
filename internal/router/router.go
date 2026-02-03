@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"test/internal/auth"
+	"test/internal/manage"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -29,6 +30,15 @@ func CreateRouter(db *sql.DB) http.Handler {
 			r.Post("/login", auth.LoginHandler(db))
 			r.Post("/refresh", auth.SilentRefreshHandler(db))
 			r.Post("/reauth", auth.ReAuthHandler(db))
+		})
+
+		r.Route("/manage", func(r chi.Router) {
+			r.Post("/workspace", manage.CreateWorkspaceHandler(db))
+			r.Post("/company", manage.CreateCompanyHandler(db))
+			r.Post("/location", manage.CreateLocationHandler(db))
+			r.Post("/task", manage.CreateTaskHandler(db))
+			r.Post("/contract", manage.CreateContractHandler(db))
+			r.Post("/employment", manage.CreateEmploymentHandler(db))
 		})
 
 		r.Route("/pin", func(r chi.Router) {

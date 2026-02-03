@@ -27,8 +27,8 @@ func CreateWorkspace(
 		`,
 		input.Name,
 	).Scan(
-		workspace.Id,
-		workspace.Name,
+		&workspace.Id,
+		&workspace.Name,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateWorkspace: db insert: %w", err)
@@ -63,9 +63,9 @@ func CreateCompany(
 		input.Name,
 		input.WorkspaceId,
 	).Scan(
-		company.Id,
-		company.Name,
-		company.WorkspaceId,
+		&company.Id,
+		&company.Name,
+		&company.WorkspaceId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateCompany: db insert: %w", err)
@@ -101,10 +101,10 @@ func CreateLocation(
 		input.Address,
 		input.WorkspaceId,
 	).Scan(
-		location.Id,
-		location.Name,
-		location.Address,
-		location.WorkspaceId,
+		&location.Id,
+		&location.Name,
+		&location.Address,
+		&location.WorkspaceId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateLocation: db insert: %w", err)
@@ -142,12 +142,12 @@ func CreateTask(
 		input.LocationId,
 		input.CompanyId,
 	).Scan(
-		task.Id,
-		task.Name,
-		task.Description,
-		task.IsCompleted,
-		task.LocationId,
-		task.CompanyId,
+		&task.Id,
+		&task.Name,
+		&task.Description,
+		&task.IsCompleted,
+		&task.LocationId,
+		&task.CompanyId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateTask: db insert: %w", err)
@@ -184,11 +184,11 @@ func CreateEmployment(
 		input.ContractId,
 		input.Role,
 	).Scan(
-		employment.Id,
-		employment.UserId,
-		employment.CompanyId,
-		employment.ContractId,
-		employment.Role,
+		&employment.Id,
+		&employment.UserId,
+		&employment.CompanyId,
+		&employment.ContractId,
+		&employment.Role,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateEmployment: db insert: %w", err)
@@ -223,9 +223,9 @@ func CreateContract(
 		input.HourlyRate,
 		input.UnpaidLunchMinutes,
 	).Scan(
-		contract.Id,
-		contract.HourlyRate,
-		contract.UnpaidLunchMinutes,
+		&contract.Id,
+		&contract.HourlyRate,
+		&contract.UnpaidLunchMinutes,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("CreateContract: db insert: %w", err)
