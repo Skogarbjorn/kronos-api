@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"test/internal/router"
+	//dbrepo "test/internal/db"
 
 	_ "github.com/lib/pq"
 )
@@ -24,8 +25,8 @@ func main() {
 
 	log.Println("Connected to PostgreSQL successfully!")
 
-	//api.DropTables(db)
-	//api.CreateTables(db)
+	//dbrepo.DropTables(db)
+	//dbrepo.CreateTables(db)
 
 	r := router.CreateRouter(db)
 

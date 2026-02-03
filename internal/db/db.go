@@ -17,34 +17,63 @@ func CreateTables(db *sql.DB) {
 	user := `
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
-		kt VARCHAR(10) UNIQUE,
+		kt VARCHAR(10) UNIQUE NOT NULL,
 		first_name VARCHAR(128),
-		last_name VARCHAR(128)
+		last_name VARCHAR(128),
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`
 	user_pin_auth := `
 	CREATE TABLE IF NOT EXISTS user_pin_auth (
-		user_id INT,
-		pin TEXT,
+		user_id INT NOT NULL,
+		pin TEXT NOT NULL,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	);`
 	user_password_auth := `
 	CREATE TABLE IF NOT EXISTS user_password_auth (
-		user_id INT,
-		email VARCHAR(128),
-		password TEXT,
+		user_id INT NOT NULL,
+		email VARCHAR(128) NOT NULL,
+		password TEXT NOT NULL,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`
+	workspace := `
+	CREATE TABLE IF NOT EXISTS workspace (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(128) NOT NULL,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);`
+	location := `
+	CREATE TABLE IF NOT EXISTS location (
+		id SERIAL PRIMARY KEY,
+		name TEXT NOT NULL,
+		address TEXT NOT NULL,
+		workspace_id INT NOT NULL,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspace(id)
 	);`
 	company := `
 	CREATE TABLE IF NOT EXISTS company (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(128)
+		name VARCHAR(128) NOT NULL,
+		workspace_id INT NOT NULL,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspace(id)
 	);`
 	contract := `
 	CREATE TABLE IF NOT EXISTS contract (
 		id SERIAL PRIMARY KEY,
 		type VARCHAR(20) CHECK (type IN ('employee', 'contracter')),
 	    hourly_rate INT,
-	    unpaid_lunch_minutes INT
+	    unpaid_lunch_minutes INT,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`
 	employment := `
 	CREATE TABLE IF NOT EXISTS employment (
@@ -55,9 +84,24 @@ func CreateTables(db *sql.DB) {
 		role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'worker')),
 		start_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		end_date TIMESTAMPTZ,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id),
 		FOREIGN KEY (company_id) REFERENCES company(id),
 		FOREIGN KEY (contract_id) REFERENCES contract(id)
+	);`
+	task := `
+	CREATE TABLE IF NOT EXISTS task (
+		id SERIAL PRIMARY KEY,
+		location_id INT NOT NULL,
+		company_id INT NOT NULL,
+		name TEXT NOT NULL,
+		description TEXT,
+		is_finished BOOLEAN DEFAULT FALSE,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE CASCADE,
+		FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE
 	);`
 	shift := `
 	CREATE TABLE IF NOT EXISTS shift (
@@ -65,6 +109,8 @@ func CreateTables(db *sql.DB) {
 		employment_id INT,
 		start_date TIMESTAMPTZ,
 		end_date TIMESTAMPTZ,
+		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (employment_id) REFERENCES employment(id)
 	);`
 	refresh_token := `
@@ -80,11 +126,14 @@ func CreateTables(db *sql.DB) {
 	);`
 
 	create(db, user)
-	create(db, company)
 	create(db, user_pin_auth)
 	create(db, user_password_auth)
+	create(db, workspace)
+	create(db, location)
+	create(db, company)
 	create(db, contract)
 	create(db, employment)
+	create(db, task)
 	create(db, shift)
 	create(db, refresh_token)
 }
