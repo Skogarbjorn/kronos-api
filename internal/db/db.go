@@ -69,7 +69,6 @@ func CreateTables(db *sql.DB) {
 	contract := `
 	CREATE TABLE IF NOT EXISTS contract (
 		id SERIAL PRIMARY KEY,
-		type VARCHAR(20) CHECK (type IN ('employee', 'contracter')),
 	    hourly_rate INT,
 	    unpaid_lunch_minutes INT,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -97,7 +96,7 @@ func CreateTables(db *sql.DB) {
 		company_id INT NOT NULL,
 		name TEXT NOT NULL,
 		description TEXT,
-		is_finished BOOLEAN DEFAULT FALSE,
+		is_completed BOOLEAN DEFAULT FALSE,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE CASCADE,

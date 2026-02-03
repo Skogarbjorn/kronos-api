@@ -3,14 +3,22 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 	"test/internal/router"
+
 	//dbrepo "test/internal/db"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	connStr := "postgresql://hbv2db_user:dawuJpPDAWjvUoYWSUNmuMLQZY2NHX98@dpg-d5npj9er433s739tg3eg-a.frankfurt-postgres.render.com/hbv2db"
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file %w", err)
+	}
+
+	connStr := os.Getenv("DATABASE_CONNECTION_STRING")
 	
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -27,8 +35,10 @@ func main() {
 
 	//dbrepo.DropTables(db)
 	//dbrepo.CreateTables(db)
+	//dbrepo.InsertDummy(db)
 
 	r := router.CreateRouter(db)
 
-	log.Fatal(router.RunServer(":8080", r))
+	port := ":" + os.Getenv("PORT")
+	log.Fatal(router.RunServer(port, r))
 }

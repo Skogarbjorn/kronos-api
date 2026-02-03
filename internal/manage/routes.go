@@ -5,6 +5,12 @@ import (
 	"net/http"
 )
 
+func CreateWorkspaceHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
 func CreateCompanyHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

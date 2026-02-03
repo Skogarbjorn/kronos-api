@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"test/internal/auth"
 	"time"
 
@@ -28,7 +29,12 @@ func CreateRouter(db *sql.DB) http.Handler {
 			r.Post("/login", auth.LoginHandler(db))
 			r.Post("/refresh", auth.SilentRefreshHandler(db))
 			r.Post("/reauth", auth.ReAuthHandler(db))
-			r.Post("/authTest", pinAuthTestHandler(db))
+		})
+
+		r.Route("/pin", func(r chi.Router) {
+			r.Use(auth.PinAuthMiddleware([]byte(os.Getenv("JWT_SECRET"))))
+
+			r.Get("/clock-in", checkhealthHandler(db))
 		})
 	})
 
@@ -54,21 +60,3 @@ func checkhealthHandler(_ *sql.DB) http.HandlerFunc {
 		w.Write([]byte("OK"))
 	}
 }
-
-func pinAuthTestHandler(_ *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authorization := r.Header.Get("Authorization")
-		if authorization == "" {
-			http.Error(w, "missing Authorization header", http.StatusBadRequest)
-			return
-		}
-
-		claims, err := auth.ExtractAndParseToken(authorization)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte(claims.Auth))
-	}
-}
-

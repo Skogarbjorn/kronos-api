@@ -63,6 +63,7 @@ type AuthResponse struct {
 }
 
 type Claims struct {
-	Auth string `json:"auth"`
+	UserID int    `json:"sub"`
+	Auth   string `json:"auth"`
 	jwt.RegisteredClaims
 }

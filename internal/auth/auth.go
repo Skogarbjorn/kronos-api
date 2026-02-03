@@ -10,7 +10,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"strconv"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -286,7 +288,7 @@ func WarmStartPin(
 		return nil, fmt.Errorf("WarmStartPin: db select: %w", err)
 	}
 
-	inputPinHash := hashPin(input.Pin, "todo!")
+	inputPinHash := hashPin(input.Pin, os.Getenv("PIN_HASH_SECRET"))
 	if subtle.ConstantTimeCompare(
 		[]byte(pinHash),
 		[]byte(inputPinHash),
@@ -336,20 +338,22 @@ func createAccessToken(
 	user_id int,
 	auth string,
 ) (*AccessToken, error) {
-	expiresAt := time.Now().Add(time.Hour).Unix()
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"sub": strconv.Itoa(user_id),
-			"auth": auth,
-			"exp": 	expiresAt,
-		})
+	expiresAt := time.Now().Add(time.Hour)
+	claims := Claims{
+		UserID: user_id,
+		Auth: auth,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+		},
+	}
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	accessTokenString, err := accessToken.SignedString([]byte("todo! create env and set secret"))
+	accessTokenString, err := accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		return nil, fmt.Errorf("createAccessToken: sign jwt: %w", err)
 	}
 
-	return &AccessToken{ Token: accessTokenString, ExpiresAt: expiresAt }, nil
+	return &AccessToken{ Token: accessTokenString, ExpiresAt: expiresAt.Unix() }, nil
 }
 
 func createRefreshToken(
@@ -400,4 +404,48 @@ func generateRefreshToken() (string, error) {
 func hashToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
+}
+
+func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			header := r.Header.Get("Authorization")
+			if header == "" {
+				http.Error(w, "missing authorization header", http.StatusUnauthorized)
+				return
+			}
+
+			parts := strings.SplitN(header, " ", 2)
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+				return
+			}
+
+			tokenStr := parts[1]
+
+			claims := &Claims{}
+			token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method")
+				}
+				return secret, nil
+			})
+
+			if err != nil || !token.Valid {
+				print(err)
+				print(token.Valid)
+				print(token)
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			if claims.Auth != "pin" {
+				http.Error(w, "invalid auth stage", http.StatusForbidden)
+				return
+			}
+			
+			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
