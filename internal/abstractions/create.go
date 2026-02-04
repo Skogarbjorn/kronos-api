@@ -16,6 +16,7 @@ type CreatorFunc[I any, O any] func(
 func CreateJSONHandler[I any, O any](
 	db *sql.DB,
 	create CreatorFunc[I, O],
+	writeError ErrorWriter,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input I
@@ -27,7 +28,7 @@ func CreateJSONHandler[I any, O any](
 
 		result, err := create(r.Context(), db, input)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeError(w, err)
 			return
 		}
 

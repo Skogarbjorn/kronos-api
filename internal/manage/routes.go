@@ -7,25 +7,25 @@ import (
 )
 
 func CreateWorkspaceHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateWorkspace)
+	return abstractions.CreateJSONHandler(db, CreateWorkspace, WriteDomainError)
 }
 
 func CreateCompanyHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateCompany)
+	return abstractions.CreateJSONHandler(db, CreateCompany, WriteDomainError)
 }
 
 func CreateLocationHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateLocation)
+	return abstractions.CreateJSONHandler(db, CreateLocation, WriteDomainError)
 }
 
 func CreateTaskHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateTask)
+	return abstractions.CreateJSONHandler(db, CreateTask, WriteDomainError)
 }
 
 func CreateEmploymentHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateEmployment)
+	return abstractions.CreateJSONHandler(db, CreateEmployment, WriteDomainError)
 }
 
 func CreateContractHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateContract)
+	return abstractions.CreateJSONHandler(db, CreateContract, WriteDomainError)
 }

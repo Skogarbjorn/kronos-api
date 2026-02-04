@@ -36,6 +36,7 @@ func main() {
 	//dbrepo.DropTables(db)
 	//dbrepo.CreateTables(db)
 	//dbrepo.InsertDummy(db)
+	//dbrepo.MiscDB(db)
 
 	r := router.CreateRouter(db)
 

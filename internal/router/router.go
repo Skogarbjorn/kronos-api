@@ -7,6 +7,7 @@ import (
 	"os"
 	"test/internal/auth"
 	"test/internal/manage"
+	"test/internal/pin"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -44,7 +45,8 @@ func CreateRouter(db *sql.DB) http.Handler {
 		r.Route("/pin", func(r chi.Router) {
 			r.Use(auth.PinAuthMiddleware([]byte(os.Getenv("JWT_SECRET"))))
 
-			r.Get("/clock-in", checkhealthHandler(db))
+			r.Post("/clock-in", pin.ClockInHandler(db))
+			r.Post("/clock-out", pin.ClockOutHandler(db))
 		})
 	})
 

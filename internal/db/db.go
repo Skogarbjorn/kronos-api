@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"log"
+	"os"
 )
 
 func create(db *sql.DB, schema string) {
@@ -11,6 +12,13 @@ func create(db *sql.DB, schema string) {
 		log.Fatalf("Failed to create table: %v", err)
 	}
 	log.Println("Table created successfully.")
+}
+func insert(db *sql.DB, row string) {
+	_, err := db.Exec(row)
+	if err != nil {
+		log.Fatalf("Failed to insert row: %v", err)
+	}
+	log.Println("Row inserted successfully.")
 }
 
 func CreateTables(db *sql.DB) {
@@ -105,9 +113,9 @@ func CreateTables(db *sql.DB) {
 	shift := `
 	CREATE TABLE IF NOT EXISTS shift (
 		id SERIAL PRIMARY KEY,
-		employment_id INT,
-		start_date TIMESTAMPTZ,
-		end_date TIMESTAMPTZ,
+		employment_id INT NOT NULL,
+		start_ts TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		end_ts TIMESTAMPTZ,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (employment_id) REFERENCES employment(id)
@@ -149,4 +157,48 @@ func DropTables(db *sql.DB) {
 		log.Fatalf("Failed to drop tables: %v", err)
 	}
 	log.Println("Tables dropped successfully.")
+}
+
+func InsertDummy(db *sql.DB) {
+	i_user := `
+	INSERT INTO users (kt, first_name, last_name)
+	VALUES (1907032070, 'ragnar bjoern', 'ingvarsson');`
+	i_user_pin := `
+	INSERT INTO user_pin_auth (user_id, pin)
+	VALUES (1, '0311a8ebc9de5629f286b5861092cc55c0a63d2d24e1aa2f7aec3da9b2de41d9');`
+	i_workspace := `
+	INSERT INTO workspace (name)
+	VALUES ('test workspace');`
+	i_location := `
+	INSERT INTO location (name, address, workspace_id)
+	VALUES ('test location', 'test address', 1);`
+	i_company := `
+	INSERT INTO company (name, workspace_id)
+	VALUES ('test company', 1);`
+	i_contract := `
+	INSERT INTO contract (hourly_rate, unpaid_lunch_minutes)
+	VALUES (4500, 30);`
+	i_employment := `
+	INSERT INTO employment (user_id, company_id, contract_id, role, end_date)
+	VALUES (1, 1, 1, 'worker', now() + interval '30 days');`
+	i_task := `
+	INSERT INTO task (location_id, company_id, name, description, is_completed)
+	VALUES (1, 1, 'test task', 'this is a dummy test task', false);`
+	insert(db, i_user)
+	insert(db, i_user_pin)
+	insert(db, i_workspace)
+	insert(db, i_location)
+	insert(db, i_company)
+	insert(db, i_contract)
+	insert(db, i_employment)
+	insert(db, i_task)
+}
+
+func MiscDB(db *sql.DB) {
+	b, err := os.ReadFile("internal/db/misc.sql")
+	_, err = db.Exec(string(b))
+	if err != nil {
+		log.Fatalf("Failed misc db actions: %v", err)
+	}
+	log.Println("Miscellaneous db actions successful")
 }
