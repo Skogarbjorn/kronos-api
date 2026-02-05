@@ -11,6 +11,7 @@ import (
 var (
 	ErrShiftAlreadyExists = errors.New("user already clocked in")
 	ErrNotClockedIn       = errors.New("user is not clocked in")
+	ErrNegativeDuration   = errors.New("shift duration cannot be negative")
 )
 
 func translateDBError(err error) error {

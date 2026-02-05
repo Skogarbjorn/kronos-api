@@ -7,9 +7,18 @@ import (
 )
 
 func ClockInHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, ClockIn, WriteDomainError)
+	return abstractions.CreateJSONHandler(
+		db,
+		ClockIn,
+		WriteDomainError,
+	)
 }
 
 func ClockOutHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, ClockOut, WriteDomainError)
+	return abstractions.CreateJSONHandler(
+		db,
+		ClockOut,
+		WriteDomainError,
+		ValidateNegativeShiftLength,
+	)
 }
