@@ -3,6 +3,7 @@ package pin
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -28,6 +29,9 @@ func ValidateNegativeShiftLength(ctx context.Context, db *sql.DB, input ClockOut
 		&start_ts,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNotClockedIn
+		}
 		return fmt.Errorf("ValidateNegativeShiftLength: db select: %w", err)
 	}
 

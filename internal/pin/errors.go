@@ -33,6 +33,8 @@ func WriteDomainError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusConflict)
 	case errors.Is(err, ErrNotClockedIn):
 		http.Error(w, err.Error(), http.StatusConflict)
+	case errors.Is(err, ErrNegativeDuration):
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	default:
 		log.Printf("internal error: %+v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

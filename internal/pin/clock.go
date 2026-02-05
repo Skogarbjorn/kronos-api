@@ -30,7 +30,7 @@ func ClockIn(
 		`
 		INSERT INTO shift (employment_id, start_ts)
 		VALUES ($1, $2)
-		R;ETURNING id, employment_id, start_ts
+		RETURNING id, employment_id, start_ts
 		`,
 		input.EmploymentId,
 		input.StartTs,
