@@ -12,3 +12,9 @@
 - [ ] Get locations/companies/tasks
 - [ ] Get contracted company+workspaces
 - [x] Error logging + error responses
+
+## CURRENTLY WORKING ON
+- [ ] (Primitive) Shift overview
+- [ ] (Primitive) Shift history
+- [ ] (Primitive) Get locations/companies/tasks
+- [ ] (Primitive) Get contracted company+workspaces
