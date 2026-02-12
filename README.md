@@ -3,7 +3,7 @@
 - [ ] Clock in / Clock out
   - [x] Main functionality
   - [x] No duplicate / cold clockout
-  - [ ] No negative duration
+  - [x] No negative duration
   - [ ] Too long shifts (limit to fixed time? no other option right?)
   - [ ] Basically validation
 - [x] Authenticated routes middleware
