@@ -47,6 +47,8 @@ func CreateRouter(db *sql.DB) http.Handler {
 
 			r.Post("/clock-in", pin.ClockInHandler(db))
 			r.Post("/clock-out", pin.ClockOutHandler(db))
+			r.Get("/shift-overview", pin.ShiftOverviewHandler(db))
+			r.Get("/shift-history", pin.ShiftHistoryHandler(db))
 		})
 	})
 

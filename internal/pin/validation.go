@@ -39,7 +39,7 @@ func ValidateNegativeShiftLength(ctx context.Context, db *sql.DB, input ClockOut
 		return fmt.Errorf("ValidateNegativeShiftLength: db commit: %w", err)
 	}
 
-	if input.EndTs.Compare(start_ts) == -1 {
+	if input.EndTs != nil && start_ts.Compare(*input.EndTs) == -1 {
 		return ErrNegativeDuration
 	}
 

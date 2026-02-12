@@ -14,7 +14,7 @@
 - [x] Error logging + error responses
 
 ## CURRENTLY WORKING ON
-- [ ] (Primitive) Shift overview
-- [ ] (Primitive) Shift history
+- [x] (Primitive) Shift overview
+- [x] (Primitive) Shift history (still have to do filters)
 - [ ] (Primitive) Get locations/companies/tasks
 - [ ] (Primitive) Get contracted company+workspaces
