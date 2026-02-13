@@ -16,5 +16,5 @@
 ## CURRENTLY WORKING ON
 - [x] (Primitive) Shift overview
 - [x] (Primitive) Shift history (still have to do filters)
-- [ ] (Primitive) Get locations/companies/tasks
-- [ ] (Primitive) Get contracted company+workspaces
+- [x] (Primitive) Get locations/companies/tasks (need to validate that user has permission)
+- [x] (Primitive) Get contracted company+workspaces

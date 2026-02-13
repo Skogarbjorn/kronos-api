@@ -147,7 +147,7 @@ func GetShiftHistory(
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
 	user_id := claims.UserID
 
-	var shifts []Shift
+	shifts := []Shift{}
 	rows, err := db.Query(
 		`
 		SELECT s.id, s.employment_id, s.task_id, s.start_ts, s.end_ts
@@ -178,4 +178,158 @@ func GetShiftHistory(
 	}
 
 	return &shifts, nil
+}
+
+func GetLocations(
+	ctx context.Context,
+	db *sql.DB,
+	workspace_id int,
+) (*[]Location, error) {
+	locations := []Location{}
+	rows, err := db.Query(
+		`
+		SELECT id, name, address, workspace_id
+		FROM location
+		WHERE workspace_id = $1
+		`,
+		workspace_id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetLocations: db select: %w", err)
+	}
+
+	for rows.Next() {
+		var location Location
+		err = rows.Scan(
+			&location.Id,
+			&location.Name,
+			&location.Address,
+			&location.WorkspaceId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("GetLocations: db scan: %w", err)
+		}
+
+		locations = append(locations, location)
+	}
+
+	return &locations, nil
+}
+
+func GetTasks(
+	ctx context.Context,
+	db *sql.DB,
+	company_id   int,
+	location_id *int,
+) (*[]Task, error) {
+	tasks := []Task{}
+	rows, err := db.Query(
+		`
+		SELECT id, name, description, is_completed, location_id, company_id
+		FROM task
+		WHERE company_id = $1
+		AND ($2::int IS NULL OR location_id = $2)
+		`,
+		company_id,
+		location_id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetTasks: db select: %w", err)
+	}
+
+	for rows.Next() {
+		var task Task
+		err = rows.Scan(
+			&task.Id,
+			&task.Name,
+			&task.Description,
+			&task.IsCompleted,
+			&task.LocationId,
+			&task.CompanyId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("GetTasks: db scan: %w", err)
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return &tasks, nil
+}
+
+func GetEmploymentsDetailed(
+	ctx context.Context,
+	db *sql.DB,
+) (*[]EmploymentDetailed, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	user_id := claims.UserID
+
+	employments := []EmploymentDetailed{}
+	rows, err := db.Query(
+		`
+		SELECT 
+			w.id,
+			w.name,
+			c.id,
+			c.name,
+			c.workspace_id,
+			e.id,
+			e.user_id,
+			e.company_id,
+			e.contract_id,
+			e.role,
+			e.start_date,
+			e.end_date,
+			ct.id,
+			ct.hourly_rate,
+			ct.unpaid_lunch_minutes
+		FROM employment e
+		JOIN contract ct ON ct.id = e.contract_id
+		JOIN company c ON c.id = e.company_id
+		JOIN workspace w ON w.id = c.workspace_id
+		WHERE e.user_id = $1
+		`,
+		user_id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetEmploymentsDetailed: db select: %w", err)
+	}
+
+	for rows.Next() {
+		var e Employment
+		var c Company
+		var w Workspace
+		var ct Contract
+		err = rows.Scan(
+			&w.Id,
+			&w.Name,
+			&c.Id,
+			&c.Name,
+			&c.WorkspaceId,
+			&e.Id,
+			&e.UserId,
+			&e.CompanyId,
+			&e.ContractId,
+			&e.Role,
+			&e.StartDate,
+			&e.EndDate,
+			&ct.Id,
+			&ct.HourlyRate,
+			&ct.UnpaidLunchMinutes,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("GetEmploymentsDetailed: db scan: %w", err)
+		}
+
+		detailed := EmploymentDetailed{
+			w,
+			c,
+			e,
+			ct,
+		}
+
+		employments = append(employments, detailed)
+	}
+
+	return &employments, nil
 }

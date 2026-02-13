@@ -18,27 +18,61 @@ type ClockOut_R struct {
 }
 
 type Shift struct {
-	Id int `json:"id"`
-	EmploymentId int `json:"employment_id"`
-	TaskId int `json:"task_id"`
-	StartTs time.Time `json:"start_ts"`
-	EndTs *time.Time `json:"end_ts"`
+	Id           int       `json:"id"`
+	EmploymentId int       `json:"employment_id"`
+	TaskId       int       `json:"task_id"`
+	StartTs      time.Time `json:"start_ts"`
+	EndTs       *time.Time `json:"end_ts"`
 }
 
 type Company struct {
-	Id int `json:"id"`
-	Name int `json:"name"`
+	Id           int    `json:"id"`
+	WorkspaceId *int    `json:"workspace_id"`
+	Name 		 string `json:"name"`
 }
 
 type Location struct {
-	Id int `json:"id"`
-	Name int `json:"name"`
-	Address int `json:"address"`
+	Id           int    `json:"id"`
+	WorkspaceId *int    `json:"workspace_id"`
+	Name         string `json:"name"`
+	Address      string `json:"address"`
 }
 
 type Workspace struct {
-	Id int `json:"id"`
-	Name int `json:"name"`
+	Id int      `json:"id"`
+	Name string `json:"name"`
+}
+
+type Role string
+const (
+	RoleAdmin   Role = "admin"
+	RoleManager Role = "manager"
+	RoleWorker  Role = "worker"
+)
+
+type Employment struct {
+	Id         int        `json:"id"`
+	UserId     int        `json:"user_id"`
+	CompanyId  int        `json:"company_id"`
+	ContractId int        `json:"contract_id"`
+	Role       Role       `json:"role"`
+	StartDate  time.Time  `json:"start_date"`
+	EndDate    time.Time  `json:"end_date"`
+}
+
+type Contract struct {
+	Id                 int `json:"id"`
+	HourlyRate         int `json:"hourly_rate"`
+	UnpaidLunchMinutes int `json:"unpaid_lunch_minutes"`
+}
+
+type Task struct {
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsCompleted bool   `json:"is_completed"`
+	CompanyId   int    `json:"company_id"`
+	LocationId  int    `json:"location_id"`
 }
 
 type ShiftOverview struct {
@@ -56,4 +90,11 @@ type ShiftHistoryFilter struct {
 	TaskId      *int       `json:"task_id"`
 	StartTs     *time.Time `json:"start_ts"`
 	EndTs       *time.Time `json:"end_ts"`
+}
+
+type EmploymentDetailed struct {
+	Workspace Workspace
+	Company Company
+	Employment Employment
+	Contract Contract
 }
