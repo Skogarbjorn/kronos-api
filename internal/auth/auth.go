@@ -19,22 +19,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(
+func CreateProfile(
 	ctx context.Context,
 	db *sql.DB,
-	input UserCreate,
-) (*User, error) {
+	input ProfileCreate,
+) (*Profile, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("CreateUser: begin tx: %w", err)
+		return nil, fmt.Errorf("CreateProfile: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var user User
+	var profile Profile
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		INSERT INTO users (kt, first_name, last_name)
+		INSERT INTO profile (kt, first_name, last_name)
 		VALUES ($1, $2, $3)
 		RETURNING id, kt, first_name, last_name
 		`,
@@ -42,49 +42,49 @@ func CreateUser(
 		input.FirstName,
 		input.LastName,
 	).Scan(
-		&user.ID,
-		&user.KT,
-		&user.FirstName,
-		&user.LastName,
+		&profile.ID,
+		&profile.KT,
+		&profile.FirstName,
+		&profile.LastName,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("CreateUser: db insert: %w", err)
+		return nil, fmt.Errorf("CreateProfile: db insert: %w", err)
 	}
 
 	if input.Pin != nil {
-		err = addPinAuth(ctx, tx, user.ID, *input.Pin)
+		err = addPinAuth(ctx, tx, profile.ID, *input.Pin)
 		if err != nil {
-			return nil, fmt.Errorf("CreateUser: %w", err)
+			return nil, fmt.Errorf("CreateProfile: %w", err)
 		}
 	}
 	if input.Password != nil {
-		err = addPasswordAuth(ctx, tx, user.ID, *input.Password, *input.Email)
+		err = addPasswordAuth(ctx, tx, profile.ID, *input.Password, *input.Email)
 		if err != nil {
-			return nil, fmt.Errorf("CreateUser: %w", err)
+			return nil, fmt.Errorf("CreateProfile: %w", err)
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("CreateUser: db commit: %w", err)
+		return nil, fmt.Errorf("CreateProfile: db commit: %w", err)
 	}
 
-	return &user, nil
+	return &profile, nil
 }
 
 func addPinAuth(
 	ctx context.Context,
 	tx *sql.Tx,
-	user_id int,
+	profile_id int,
 	pin string,
 ) error {
 	pinHash := hashPin(pin, "todo!")
 	_, err := tx.ExecContext(
 		ctx,
 		`
-		INSERT INTO user_pin_auth (user_id, pin)
+		INSERT INTO profile_pin_auth (profile_id, pin)
 		VALUES ($1, $2)
 		`,
-		user_id,
+		profile_id,
 		pinHash,
 	)
 	if err != nil {
@@ -102,7 +102,7 @@ func hashPin(pin string, _ string) string {
 func addPasswordAuth(
 	ctx context.Context,
 	tx *sql.Tx,
-	user_id int,
+	profile_id int,
 	password string,
 	email string,
 ) error {
@@ -114,10 +114,10 @@ func addPasswordAuth(
 	_, err = tx.ExecContext(
 		ctx,
 		`
-		INSERT INTO user_password_auth (user_id, email, password)
+		INSERT INTO profile_password_auth (profile_id, email, password)
 		VALUES ($1, $2, $3)
 		`,
-		user_id,
+		profile_id,
 		email,
 		passwordHash,
 	)
@@ -132,19 +132,23 @@ func addPasswordAuth(
 func ColdStartPin(
 	ctx context.Context,
 	db *sql.DB,
-	input UserPinAuth,
+	input ProfilePinAuth,
 ) (*AuthResponse, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("AuthenticateUser: begin tx: %w", err)
+		return nil, fmt.Errorf("AuthenticateProfile: begin tx: %w", err)
 	}
 	defer tx.Rollback()
+	println("after making tx")
 
 	var (
-		user    User
+		profile    Profile
 		pinHash string
 	)
 
+	println("after init profile + pinHash")
+
+	println("before making query")
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -154,23 +158,26 @@ func ColdStartPin(
 			u.first_name,
 			u.last_name,
 			p.pin
-		FROM users u
-		JOIN user_pin_auth p ON p.user_id = u.id
+		FROM profile u
+		JOIN profile_pin_auth p ON p.profile_id = u.id
 		WHERE u.kt = $1
 		`,
 		input.KT,
 	).Scan(
-		&user.ID,
-		&user.KT,
-		&user.FirstName,
-		&user.LastName,
+		&profile.ID,
+		&profile.KT,
+		&profile.FirstName,
+		&profile.LastName,
 		&pinHash,
 	)
+	println("before handling sql errors")
 	if err == sql.ErrNoRows {
-		return nil, ErrUserNotFound
+		return nil, ErrProfileNotFound
 	}; if err != nil {
-		return nil, fmt.Errorf("AuthenticateUser: query user: %w", err)
+		return nil, fmt.Errorf("AuthenticateProfile: query profile: %w", err)
 	}
+
+	println("before hashing")
 
 	inputPinHash := hashPin(input.Pin, "todo!")
 	if subtle.ConstantTimeCompare(
@@ -180,23 +187,28 @@ func ColdStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, err := createAccessToken(user.ID, "pin")
+	println("before creating tokens")
+
+	accessToken, err := createAccessToken(profile.ID, "pin")
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := createRefreshToken(ctx, tx, user.ID, input.DeviceID)
+	refreshToken, err := createRefreshToken(ctx, tx, profile.ID, input.DeviceID)
 	if err != nil {
 		return nil, err
 	}
 
+	println("before creating response")
+
 	response := AuthResponse{
 		Message: "Login successful",
-		User: user,
+		Profile: profile,
 		Tokens: Tokens{
 			AccessToken: *accessToken,
 			RefreshToken: *refreshToken,
 		},
 	}
+	println(response.Message)
 
 	tx.Commit()
 
@@ -206,7 +218,7 @@ func ColdStartPin(
 func RefreshTokens(
 	ctx context.Context,
 	db *sql.DB,
-	input UserSilentRefresh,
+	input ProfileSilentRefresh,
 ) (*Tokens, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -216,25 +228,25 @@ func RefreshTokens(
 
 	hash := hashToken(input.RefreshToken)
 
-	var user_id int
+	var profile_id int
 	var token_id int
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		SELECT id, user_id FROM refresh_token WHERE 
+		SELECT id, profile_id FROM refresh_token WHERE 
 		token_hash = $1 AND device_id = $2 AND expires_at > now()
 		`,
 		hash,
 		input.DeviceID,
 	).Scan(
 		&token_id,
-		&user_id,
+		&profile_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: db select: %w", err)
 	}
 
-	access, refresh, err := rotateTokens(ctx, tx, user_id, input.DeviceID, token_id)
+	access, refresh, err := rotateTokens(ctx, tx, profile_id, input.DeviceID, token_id)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: %w", err)
 	}
@@ -252,7 +264,7 @@ func RefreshTokens(
 func WarmStartPin(
 	ctx context.Context,
 	db *sql.DB,
-	input UserReAuth,
+	input ProfileReAuth,
 ) (*Tokens, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -263,7 +275,7 @@ func WarmStartPin(
 	hashedToken := hashToken(input.RefreshToken)
 
 	var (
-		user_id int
+		profile_id int
 		pinHash string
 		token_id int
 	)
@@ -272,16 +284,16 @@ func WarmStartPin(
 		ctx,
 		`
 		SELECT r.id, u.id, p.pin 
-        FROM users u
-        JOIN refresh_token r ON r.user_id = u.id
-        JOIN user_pin_auth p ON p.user_id = u.id
+        FROM profile u
+        JOIN refresh_token r ON r.profile_id = u.id
+        JOIN profile_pin_auth p ON p.profile_id = u.id
         WHERE r.token_hash = $1 AND r.device_id = $2
 		`,
 		hashedToken,
 		input.DeviceID,
 	).Scan(
 		&token_id,
-		&user_id,
+		&profile_id,
 		&pinHash,
 	)
 	if err != nil {
@@ -296,7 +308,7 @@ func WarmStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, refreshToken, err := rotateTokens(ctx, tx, user_id, input.DeviceID, token_id)
+	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile_id, input.DeviceID, token_id)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: %w", err)
 	}
@@ -314,7 +326,7 @@ func WarmStartPin(
 func rotateTokens(
 	ctx context.Context,
 	tx *sql.Tx,
-	user_id int,
+	profile_id int,
 	device_id string,
 	old_token_id int,
 ) (*AccessToken, *RefreshToken, error) {
@@ -329,18 +341,18 @@ func rotateTokens(
 		return nil, nil, fmt.Errorf("rotateTokens: %w", err)
 	}
 
-	access, _ := createAccessToken(user_id, "pin")
-	refresh, _ := createRefreshToken(ctx, tx, user_id, device_id)
+	access, _ := createAccessToken(profile_id, "pin")
+	refresh, _ := createRefreshToken(ctx, tx, profile_id, device_id)
 	return access, refresh, nil
 }
 
 func createAccessToken(
-	user_id int,
+	profile_id int,
 	auth string,
 ) (*AccessToken, error) {
 	expiresAt := time.Now().Add(time.Hour)
 	claims := Claims{
-		UserID: user_id,
+		ProfileID: profile_id,
 		Auth: auth,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
@@ -359,7 +371,7 @@ func createAccessToken(
 func createRefreshToken(
 	ctx context.Context,
 	tx *sql.Tx,
-	user_id int,
+	profile_id int,
 	device_id string,
 ) (*RefreshToken, error) {
 	token, err := generateRefreshToken()
@@ -372,15 +384,15 @@ func createRefreshToken(
 	_, err = tx.ExecContext(
 		ctx,
 		`
-		INSERT INTO refresh_token (user_id, device_id, token_hash, expires_at)
+		INSERT INTO refresh_token (profile_id, device_id, token_hash, expires_at)
 		VALUES ($1, $2, $3, now() + interval '12 hours')
-		ON CONFLICT (user_id, device_id)
+		ON CONFLICT (profile_id, device_id)
 		DO UPDATE SET
 			token_hash = EXCLUDED.token_hash,
 			expires_at = EXCLUDED.expires_at,
 			created_at = now()
 		`,
-		user_id,
+		profile_id,
 		device_id,
 		tokenHash,
 	)

@@ -22,8 +22,8 @@ func insert(db *sql.DB, row string) {
 }
 
 func CreateTables(db *sql.DB) {
-	user := `
-	CREATE TABLE IF NOT EXISTS users (
+	profile := `
+	CREATE TABLE IF NOT EXISTS profile (
 		id SERIAL PRIMARY KEY,
 		kt VARCHAR(10) UNIQUE NOT NULL,
 		first_name VARCHAR(128),
@@ -31,22 +31,22 @@ func CreateTables(db *sql.DB) {
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`
-	user_pin_auth := `
-	CREATE TABLE IF NOT EXISTS user_pin_auth (
-		user_id INT NOT NULL,
+	profile_pin_auth := `
+	CREATE TABLE IF NOT EXISTS profile_pin_auth (
+		profile_id INT NOT NULL,
 		pin TEXT NOT NULL,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		FOREIGN KEY (profile_id) REFERENCES profile(id)
 	);`
-	user_password_auth := `
-	CREATE TABLE IF NOT EXISTS user_password_auth (
-		user_id INT NOT NULL,
+	profile_password_auth := `
+	CREATE TABLE IF NOT EXISTS profile_password_auth (
+		profile_id INT NOT NULL,
 		email VARCHAR(128) NOT NULL,
 		password TEXT NOT NULL,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		FOREIGN KEY (profile_id) REFERENCES profile(id)
 	);`
 	workspace := `
 	CREATE TABLE IF NOT EXISTS workspace (
@@ -85,7 +85,7 @@ func CreateTables(db *sql.DB) {
 	employment := `
 	CREATE TABLE IF NOT EXISTS employment (
 		id SERIAL PRIMARY KEY,
-		user_id INT,
+		profile_id INT,
 		company_id INT,
 		contract_id INT,
 		role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'worker')),
@@ -93,7 +93,7 @@ func CreateTables(db *sql.DB) {
 		end_date TIMESTAMPTZ,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (profile_id) REFERENCES profile(id),
 		FOREIGN KEY (company_id) REFERENCES company(id),
 		FOREIGN KEY (contract_id) REFERENCES contract(id)
 	);`
@@ -125,18 +125,18 @@ func CreateTables(db *sql.DB) {
 	refresh_token := `
 	CREATE TABLE IF NOT EXISTS refresh_token (
 		id SERIAL PRIMARY KEY,
-		user_id INT NOT NULL,
+		profile_id INT NOT NULL,
 		device_id TEXT NOT NULL,
 		token_hash TEXT NOT NULL,
 		expires_at TIMESTAMP NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		UNIQUE(user_id, device_id)
+		FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
+		UNIQUE(profile_id, device_id)
 	);`
 
-	create(db, user)
-	create(db, user_pin_auth)
-	create(db, user_password_auth)
+	create(db, profile)
+	create(db, profile_pin_auth)
+	create(db, profile_password_auth)
 	create(db, workspace)
 	create(db, location)
 	create(db, company)
@@ -162,11 +162,11 @@ func DropTables(db *sql.DB) {
 }
 
 func InsertDummy(db *sql.DB) {
-	i_user := `
-	INSERT INTO users (kt, first_name, last_name)
+	i_profile := `
+	INSERT INTO profile (kt, first_name, last_name)
 	VALUES (1907032070, 'ragnar bjoern', 'ingvarsson');`
-	i_user_pin := `
-	INSERT INTO user_pin_auth (user_id, pin)
+	i_profile_pin := `
+	INSERT INTO profile_pin_auth (profile_id, pin)
 	VALUES (1, '0311a8ebc9de5629f286b5861092cc55c0a63d2d24e1aa2f7aec3da9b2de41d9');`
 	i_workspace := `
 	INSERT INTO workspace (name)
@@ -181,13 +181,13 @@ func InsertDummy(db *sql.DB) {
 	INSERT INTO contract (hourly_rate, unpaid_lunch_minutes)
 	VALUES (4500, 30);`
 	i_employment := `
-	INSERT INTO employment (user_id, company_id, contract_id, role, end_date)
+	INSERT INTO employment (profile_id, company_id, contract_id, role, end_date)
 	VALUES (1, 1, 1, 'worker', now() + interval '30 days');`
 	i_task := `
 	INSERT INTO task (location_id, company_id, name, description, is_completed)
 	VALUES (1, 1, 'test task', 'this is a dummy test task', false);`
-	insert(db, i_user)
-	insert(db, i_user_pin)
+	insert(db, i_profile)
+	insert(db, i_profile_pin)
 	insert(db, i_workspace)
 	insert(db, i_location)
 	insert(db, i_company)

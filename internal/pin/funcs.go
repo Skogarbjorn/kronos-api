@@ -103,7 +103,7 @@ func GetShiftOverview(
 	db *sql.DB,
 ) (*ShiftOverview, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
-	user_id := claims.UserID
+	profile_id := claims.ProfileID
 
 	var shiftOverview ShiftOverview
 	err := db.QueryRowContext(
@@ -116,10 +116,10 @@ func GetShiftOverview(
 		JOIN location l ON l.id = t.location_id
 		JOIN company c ON c.id = t.company_id
 		JOIN workspace w ON w.id = c.workspace_id
-		WHERE e.user_id = $1
+		WHERE e.profile_id = $1
 		AND s.end_ts IS NULL
 		`,
-		user_id,
+		profile_id,
 	).Scan(
 		&shiftOverview.Shift.Id,
 		&shiftOverview.Shift.EmploymentId,
@@ -145,7 +145,7 @@ func GetShiftHistory(
 	db *sql.DB,
 ) (*[]Shift, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
-	user_id := claims.UserID
+	profile_id := claims.ProfileID
 
 	shifts := []Shift{}
 	rows, err := db.Query(
@@ -153,9 +153,9 @@ func GetShiftHistory(
 		SELECT s.id, s.employment_id, s.task_id, s.start_ts, s.end_ts
 		FROM shift s
 		JOIN employment e ON e.id = s.employment_id
-		WHERE e.user_id = $1
+		WHERE e.profile_id = $1
 		`,
-		user_id,
+		profile_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("GetShiftHistory: db select: %w", err)
@@ -262,7 +262,7 @@ func GetEmploymentsDetailed(
 	db *sql.DB,
 ) (*[]EmploymentDetailed, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
-	user_id := claims.UserID
+	profile_id := claims.ProfileID
 
 	employments := []EmploymentDetailed{}
 	rows, err := db.Query(
@@ -274,7 +274,7 @@ func GetEmploymentsDetailed(
 			c.name,
 			c.workspace_id,
 			e.id,
-			e.user_id,
+			e.profile_id,
 			e.company_id,
 			e.contract_id,
 			e.role,
@@ -287,9 +287,9 @@ func GetEmploymentsDetailed(
 		JOIN contract ct ON ct.id = e.contract_id
 		JOIN company c ON c.id = e.company_id
 		JOIN workspace w ON w.id = c.workspace_id
-		WHERE e.user_id = $1
+		WHERE e.profile_id = $1
 		`,
-		user_id,
+		profile_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("GetEmploymentsDetailed: db select: %w", err)
@@ -307,7 +307,7 @@ func GetEmploymentsDetailed(
 			&c.Name,
 			&c.WorkspaceId,
 			&e.Id,
-			&e.UserId,
+			&e.ProfileId,
 			&e.CompanyId,
 			&e.ContractId,
 			&e.Role,

@@ -7,7 +7,7 @@ import (
 )
 
 func RegisterHandler(db *sql.DB) http.HandlerFunc {
-	return abstractions.CreateJSONHandler(db, CreateUser, WriteDomainError)
+	return abstractions.CreateJSONHandler(db, CreateProfile, WriteDomainError)
 }
 
 func LoginHandler(db *sql.DB) http.HandlerFunc {

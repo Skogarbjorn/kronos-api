@@ -175,17 +175,17 @@ func CreateEmployment(
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		INSERT INTO employment (user_id, company_id, contract_id, role)
+		INSERT INTO employment (profile_id, company_id, contract_id, role)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, user_id, company_id, contract_id, role
+		RETURNING id, profile_id, company_id, contract_id, role
 		`,
-		input.UserId,
+		input.ProfileId,
 		input.CompanyId,
 		input.ContractId,
 		input.Role,
 	).Scan(
 		&employment.Id,
-		&employment.UserId,
+		&employment.ProfileId,
 		&employment.CompanyId,
 		&employment.ContractId,
 		&employment.Role,

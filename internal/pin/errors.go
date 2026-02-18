@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrShiftAlreadyExists = errors.New("user already clocked in")
-	ErrNotClockedIn       = errors.New("user is not clocked in")
+	ErrShiftAlreadyExists = errors.New("already clocked in")
+	ErrNotClockedIn       = errors.New("not clocked in")
 	ErrNegativeDuration   = errors.New("shift duration cannot be negative")
 )
 

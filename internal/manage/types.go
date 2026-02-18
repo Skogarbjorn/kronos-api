@@ -58,14 +58,14 @@ type TaskCreate struct {
 
 type Employment struct {
 	Id   		int `json:"id"`
-	UserId      int `json:"user_id"`
+	ProfileId      int `json:"profile_id"`
 	CompanyId   int `json:"company_id"`
 	ContractId  int `json:"contract_id"`
 	Role 	    Role `json:"role"`
 }
 
 type EmploymentCreate struct {
-	UserId 	   int `json:"user_id"`
+	ProfileId 	   int `json:"profile_id"`
 	CompanyId  int `json:"company_id"`
 	ContractId int `json:"contract_id"`
 	Role 	   Role `json:"role"`
