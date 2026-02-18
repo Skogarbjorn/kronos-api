@@ -15,7 +15,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file %w", err)
+		log.Println("Error loading .env file %w", err)
 	}
 
 	connStr := os.Getenv("DATABASE_CONNECTION_STRING")
@@ -40,6 +40,6 @@ func main() {
 
 	r := router.CreateRouter(db)
 
-	port := ":" + os.Getenv("PORT")
-	log.Fatal(router.RunServer(port, r))
+	port := os.Getenv("PORT")
+	log.Fatal(router.RunServer(":" + port, r))
 }
