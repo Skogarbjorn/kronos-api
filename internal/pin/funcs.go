@@ -14,6 +14,9 @@ func ClockIn(
 	db *sql.DB,
 	input ClockIn_R,
 ) (*Shift, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ClockIn: begin tx: %w", err)
@@ -29,16 +32,16 @@ func ClockIn(
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		INSERT INTO shift (employment_id, task_id, start_ts)
+		INSERT INTO shift (profile_id, task_id, start_ts)
 		VALUES ($1, $2, $3)
-		RETURNING id, employment_id, task_id, start_ts
+		RETURNING id, profile_id, task_id, start_ts
 		`,
-		input.EmploymentId,
+		profile_id,
 		input.TaskId,
 		input.StartTs,
 	).Scan(
 		&shift.Id,
-		&shift.EmploymentId,
+		&shift.ProfileId,
 		&shift.TaskId,
 		&shift.StartTs,
 	)
@@ -57,6 +60,9 @@ func ClockOut(
 	db *sql.DB,
 	input ClockOut_R,
 ) (*Shift, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ClockIn: begin tx: %w", err)
@@ -74,14 +80,15 @@ func ClockOut(
 		`
 		UPDATE shift 
 		SET end_ts = $1
-		WHERE end_ts IS NULL AND employment_id = $2
-		RETURNING id, employment_id, start_ts, end_ts
+		WHERE end_ts IS NULL AND profile_id = $2
+		RETURNING id, profile_id, task_id, start_ts, end_ts
 		`,
 		input.EndTs,
-		input.EmploymentId,
+		profile_id,
 	).Scan(
 		&shift.Id,
-		&shift.EmploymentId,
+		&shift.ProfileId,
+		&shift.TaskId,
 		&shift.StartTs,
 		&shift.EndTs,
 	)
@@ -98,6 +105,7 @@ func ClockOut(
 	return &shift, nil
 }
 
+// BROKEN SINCE EMPLOYMENT_ID -> PROFILE_ID IN SHIFTS
 func GetShiftOverview(
 	ctx context.Context,
 	db *sql.DB,
@@ -109,7 +117,7 @@ func GetShiftOverview(
 	err := db.QueryRowContext(
 		ctx,
 		`
-		SELECT s.id, s.employment_id, s.task_id, s.start_ts, w.name, c.name, l.name, t.name 
+		SELECT s.id, s.profile_id, s.task_id, s.start_ts, w.name, c.name, l.name, t.name 
 		FROM shift s
 		JOIN employment e ON e.id = s.employment_id
 		JOIN task t ON t.id = s.task_id
@@ -122,7 +130,7 @@ func GetShiftOverview(
 		profile_id,
 	).Scan(
 		&shiftOverview.Shift.Id,
-		&shiftOverview.Shift.EmploymentId,
+		&shiftOverview.Shift.ProfileId,
 		&shiftOverview.Shift.TaskId,
 		&shiftOverview.Shift.StartTs,
 		&shiftOverview.Workspace,
@@ -150,10 +158,9 @@ func GetShiftHistory(
 	shifts := []Shift{}
 	rows, err := db.Query(
 		`
-		SELECT s.id, s.employment_id, s.task_id, s.start_ts, s.end_ts
+		SELECT s.id, s.profile_id, s.task_id, s.start_ts, s.end_ts
 		FROM shift s
-		JOIN employment e ON e.id = s.employment_id
-		WHERE e.profile_id = $1
+		WHERE s.profile_id = $1
 		`,
 		profile_id,
 	)
@@ -165,7 +172,7 @@ func GetShiftHistory(
 		var shift Shift
 		err = rows.Scan(
 			&shift.Id,
-			&shift.EmploymentId,
+			&shift.ProfileId,
 			&shift.TaskId,
 			&shift.StartTs,
 			&shift.EndTs,

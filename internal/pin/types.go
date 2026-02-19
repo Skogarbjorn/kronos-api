@@ -3,22 +3,20 @@ package pin
 import "time"
 
 type ClockIn_R struct {
-	EmploymentId *int       `json:"employment_id"`
 	TaskId        int       `json:"task_id"`
 	StartTs      *time.Time `json:"start_ts"`
 }
 
 type ClockOut_R struct {
-	EmploymentId *int       `json:"employment_id"`
 	EndTs        *time.Time `json:"end_ts"`
 }
 
 type Shift struct {
-	Id           int       `json:"id"`
-	EmploymentId int       `json:"employment_id"`
-	TaskId       int       `json:"task_id"`
-	StartTs      time.Time `json:"start_ts"`
-	EndTs       *time.Time `json:"end_ts"`
+	Id        int       `json:"id"`
+	ProfileId int       `json:"profile_id"`
+	TaskId    int       `json:"task_id"`
+	StartTs   time.Time `json:"start_ts"`
+	EndTs    *time.Time `json:"end_ts"`
 }
 
 type Company struct {

@@ -113,13 +113,13 @@ func CreateTables(db *sql.DB) {
 	shift := `
 	CREATE TABLE IF NOT EXISTS shift (
 		id SERIAL PRIMARY KEY,
-		employment_id INT NOT NULL,
+		profile_id INT NOT NULL,
 		task_id INT NOT NULL,
 		start_ts TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		end_ts TIMESTAMPTZ,
 		created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (employment_id) REFERENCES employment(id),
+		FOREIGN KEY (profile_id) REFERENCES profile(id),
 		FOREIGN KEY (task_id) REFERENCES task(id)
 	);`
 	refresh_token := `

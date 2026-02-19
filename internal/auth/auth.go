@@ -265,7 +265,7 @@ func WarmStartPin(
 	ctx context.Context,
 	db *sql.DB,
 	input ProfileReAuth,
-) (*Tokens, error) {
+) (*AuthResponse, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: begin tx: %w", err)
@@ -278,12 +278,13 @@ func WarmStartPin(
 		profile_id int
 		pinHash string
 		token_id int
+		profile Profile
 	)
 
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		SELECT r.id, u.id, p.pin 
+		SELECT r.id, u.id, p.pin, u.id, u.kt, u.first_name, u.last_name
         FROM profile u
         JOIN refresh_token r ON r.profile_id = u.id
         JOIN profile_pin_auth p ON p.profile_id = u.id
@@ -295,6 +296,10 @@ func WarmStartPin(
 		&token_id,
 		&profile_id,
 		&pinHash,
+		&profile.ID,
+		&profile.KT,
+		&profile.FirstName,
+		&profile.LastName,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: db select: %w", err)
@@ -320,7 +325,13 @@ func WarmStartPin(
 		RefreshToken: *refreshToken,
 	}
 
-	return &tokens, nil
+	response := AuthResponse{
+		Message: "Authentication successful",
+		Tokens: tokens,
+		Profile: profile,
+	}
+
+	return &response, nil
 }
 
 func rotateTokens(

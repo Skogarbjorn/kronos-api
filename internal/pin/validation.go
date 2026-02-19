@@ -5,10 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"test/internal/auth"
 	"time"
 )
 
 func ValidateNegativeShiftLength(ctx context.Context, db *sql.DB, input ClockOut_R) error {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("ValidateNegativeShiftLength: begin tx: %w", err)
@@ -21,10 +25,10 @@ func ValidateNegativeShiftLength(ctx context.Context, db *sql.DB, input ClockOut
 		`
 		SELECT (start_ts)
 		FROM shift
-		WHERE employment_id = $1
+		WHERE profile_id = $1
 		AND end_ts IS NULL
 		`,
-		input.EmploymentId,
+		profile_id,
 	).Scan(
 		&start_ts,
 	)
