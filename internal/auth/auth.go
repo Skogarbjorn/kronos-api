@@ -219,7 +219,7 @@ func RefreshTokens(
 	ctx context.Context,
 	db *sql.DB,
 	input ProfileSilentRefresh,
-) (*Tokens, error) {
+) (*AuthResponse, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: begin tx: %w", err)
@@ -228,13 +228,18 @@ func RefreshTokens(
 
 	hash := hashToken(input.RefreshToken)
 
-	var profile_id int
-	var token_id int
+	var (
+	    profile_id int
+	    token_id int
+		profile Profile
+	)
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		SELECT id, profile_id FROM refresh_token WHERE 
-		token_hash = $1 AND device_id = $2 AND expires_at > now()
+		SELECT r.id, r.profile_id, p.id, p.kt, p.first_name, p.last_name
+		FROM refresh_token r
+		JOIN profile p ON p.id = r.profile_id
+		WHERE r.token_hash = $1 AND r.device_id = $2 AND r.expires_at > now()
 		`,
 		hash,
 		input.DeviceID,
@@ -258,7 +263,13 @@ func RefreshTokens(
 		RefreshToken: *refresh,
 	}
 
-	return &tokens, nil
+	response := AuthResponse{
+		Message: "Silent refresh successful",
+		Tokens: tokens,
+		Profile: profile,
+	}
+
+	return &response, nil
 }
 
 func WarmStartPin(
