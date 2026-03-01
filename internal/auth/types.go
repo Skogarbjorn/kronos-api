@@ -1,6 +1,10 @@
 package auth
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"test/internal/model"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type ProfileCreate struct {
 	KT        string `json:"kt"`
@@ -49,17 +53,15 @@ type AccessToken struct {
 	ExpiresAt int64 `json:"expires_at"`
 }
 
-type Profile struct {
-	ID        int    `json:"id"`
-	KT        string `json:"kt"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+type ProfileExtended struct {
+	Profile model.Profile `json:"profile"`
+	Employment model.Employment `json:"employment"`
 }
 
 type AuthResponse struct {
 	Message string `json:"message"`
 	Tokens  Tokens `json:"tokens"`
-	Profile    Profile   `json:"profile"`
+	ProfileExtended ProfileExtended `json:"profile_extended"`
 }
 
 type Claims struct {
@@ -67,3 +69,4 @@ type Claims struct {
 	Auth   string `json:"auth"`
 	jwt.RegisteredClaims
 }
+

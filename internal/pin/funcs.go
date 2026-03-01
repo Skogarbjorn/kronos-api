@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"test/internal/auth"
+	"test/internal/model"
 	"time"
 )
 
@@ -13,7 +14,7 @@ func ClockIn(
 	ctx context.Context,
 	db *sql.DB,
 	input ClockIn_R,
-) (*Shift, error) {
+) (*model.Shift, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
 	profile_id := claims.ProfileID
 
@@ -28,7 +29,7 @@ func ClockIn(
 		input.StartTs = &now
 	}
 
-	var shift Shift
+	var shift model.Shift
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -59,7 +60,7 @@ func ClockOut(
 	ctx context.Context,
 	db *sql.DB,
 	input ClockOut_R,
-) (*Shift, error) {
+) (*model.Shift, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
 	profile_id := claims.ProfileID
 
@@ -74,7 +75,7 @@ func ClockOut(
 		input.EndTs = &now
 	}
 
-	var shift Shift
+	var shift model.Shift
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -105,7 +106,6 @@ func ClockOut(
 	return &shift, nil
 }
 
-// BROKEN SINCE EMPLOYMENT_ID -> PROFILE_ID IN SHIFTS
 func GetShiftOverview(
 	ctx context.Context,
 	db *sql.DB,
@@ -119,12 +119,11 @@ func GetShiftOverview(
 		`
 		SELECT s.id, s.profile_id, s.task_id, s.start_ts, w.name, c.name, l.name, t.name 
 		FROM shift s
-		JOIN employment e ON e.id = s.employment_id
 		JOIN task t ON t.id = s.task_id
 		JOIN location l ON l.id = t.location_id
 		JOIN company c ON c.id = t.company_id
 		JOIN workspace w ON w.id = c.workspace_id
-		WHERE e.profile_id = $1
+		WHERE s.profile_id = $1
 		AND s.end_ts IS NULL
 		`,
 		profile_id,
@@ -151,11 +150,11 @@ func GetShiftOverview(
 func GetShiftHistory(
 	ctx context.Context,
 	db *sql.DB,
-) (*[]Shift, error) {
+) (*[]model.Shift, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
 	profile_id := claims.ProfileID
 
-	shifts := []Shift{}
+	shifts := []model.Shift{}
 	rows, err := db.Query(
 		`
 		SELECT s.id, s.profile_id, s.task_id, s.start_ts, s.end_ts
@@ -169,7 +168,7 @@ func GetShiftHistory(
 	}
 
 	for rows.Next() {
-		var shift Shift
+		var shift model.Shift
 		err = rows.Scan(
 			&shift.Id,
 			&shift.ProfileId,
@@ -191,8 +190,8 @@ func GetLocations(
 	ctx context.Context,
 	db *sql.DB,
 	workspace_id int,
-) (*[]Location, error) {
-	locations := []Location{}
+) (*[]model.Location, error) {
+	locations := []model.Location{}
 	rows, err := db.Query(
 		`
 		SELECT id, name, address, workspace_id
@@ -206,7 +205,7 @@ func GetLocations(
 	}
 
 	for rows.Next() {
-		var location Location
+		var location model.Location
 		err = rows.Scan(
 			&location.Id,
 			&location.Name,
@@ -228,8 +227,8 @@ func GetTasks(
 	db *sql.DB,
 	company_id   int,
 	location_id *int,
-) (*[]Task, error) {
-	tasks := []Task{}
+) (*[]model.Task, error) {
+	tasks := []model.Task{}
 	rows, err := db.Query(
 		`
 		SELECT id, name, description, is_completed, location_id, company_id
@@ -245,7 +244,7 @@ func GetTasks(
 	}
 
 	for rows.Next() {
-		var task Task
+		var task model.Task
 		err = rows.Scan(
 			&task.Id,
 			&task.Name,
@@ -303,10 +302,10 @@ func GetEmploymentsDetailed(
 	}
 
 	for rows.Next() {
-		var e Employment
-		var c Company
-		var w Workspace
-		var ct Contract
+		var e model.Employment
+		var c model.Company
+		var w model.Workspace
+		var ct model.Contract
 		err = rows.Scan(
 			&w.Id,
 			&w.Name,

@@ -4,20 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"test/internal/model"
 )
 
 func CreateWorkspace(
 	ctx context.Context,
 	db *sql.DB,
 	input WorkspaceCreate,
-) (*Workspace, error) {
+) (*model.Workspace, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateWorkspace: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var workspace Workspace
+	var workspace model.Workspace
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -45,14 +46,14 @@ func CreateCompany(
 	ctx context.Context,
 	db *sql.DB,
 	input CompanyCreate,
-) (*Company, error) {
+) (*model.Company, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateCompany: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var company Company
+	var company model.Company
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -82,14 +83,14 @@ func CreateLocation(
 	ctx context.Context,
 	db *sql.DB,
 	input LocationCreate,
-) (*Location, error) {
+) (*model.Location, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateLocation: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var location Location
+	var location model.Location
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -121,14 +122,14 @@ func CreateTask(
 	ctx context.Context,
 	db *sql.DB,
 	input TaskCreate,
-) (*Task, error) {
+) (*model.Task, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateTask: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var task Task
+	var task model.Task
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -164,14 +165,14 @@ func CreateEmployment(
 	ctx context.Context,
 	db *sql.DB,
 	input EmploymentCreate,
-) (*Employment, error) {
+) (*model.Employment, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateEmployment: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var employment Employment
+	var employment model.Employment
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -205,14 +206,14 @@ func CreateContract(
 	ctx context.Context,
 	db *sql.DB,
 	input ContractCreate,
-) (*Contract, error) {
+) (*model.Contract, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateContract: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var contract Contract
+	var contract model.Contract
 	err = tx.QueryRowContext(
 		ctx,
 		`

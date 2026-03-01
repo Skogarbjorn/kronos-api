@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"test/internal/model"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -23,14 +24,14 @@ func CreateProfile(
 	ctx context.Context,
 	db *sql.DB,
 	input ProfileCreate,
-) (*Profile, error) {
+) (*model.Profile, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateProfile: begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var profile Profile
+	var profile model.Profile
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -139,16 +140,13 @@ func ColdStartPin(
 		return nil, fmt.Errorf("AuthenticateProfile: begin tx: %w", err)
 	}
 	defer tx.Rollback()
-	println("after making tx")
 
 	var (
-		profile    Profile
+		profile    model.Profile
+		employment model.Employment
 		pinHash string
 	)
 
-	println("after init profile + pinHash")
-
-	println("before making query")
 	err = tx.QueryRowContext(
 		ctx,
 		`
@@ -157,9 +155,11 @@ func ColdStartPin(
 			u.kt,
 			u.first_name,
 			u.last_name,
-			p.pin
+			p.pin,
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
 		FROM profile u
 		JOIN profile_pin_auth p ON p.profile_id = u.id
+		JOIN employment e ON p.profile_id = u.id
 		WHERE u.kt = $1
 		`,
 		input.KT,
@@ -169,15 +169,19 @@ func ColdStartPin(
 		&profile.FirstName,
 		&profile.LastName,
 		&pinHash,
+		&employment.Id,
+		&employment.ProfileId,
+		&employment.CompanyId,
+		&employment.ContractId,
+		&employment.Role,
+		&employment.StartDate,
+		&employment.EndDate,
 	)
-	println("before handling sql errors")
 	if err == sql.ErrNoRows {
 		return nil, ErrProfileNotFound
 	}; if err != nil {
 		return nil, fmt.Errorf("AuthenticateProfile: query profile: %w", err)
 	}
-
-	println("before hashing")
 
 	inputPinHash := hashPin(input.Pin, "todo!")
 	if subtle.ConstantTimeCompare(
@@ -186,8 +190,6 @@ func ColdStartPin(
 	) != 1 {
 		return nil, ErrInvalidCredentials
 	}
-
-	println("before creating tokens")
 
 	accessToken, err := createAccessToken(profile.ID, "pin")
 	if err != nil {
@@ -198,11 +200,14 @@ func ColdStartPin(
 		return nil, err
 	}
 
-	println("before creating response")
+	profileExtended := ProfileExtended{
+		Profile: profile,
+		Employment: employment,
+	}
 
 	response := AuthResponse{
 		Message: "Login successful",
-		Profile: profile,
+		ProfileExtended: profileExtended,
 		Tokens: Tokens{
 			AccessToken: *accessToken,
 			RefreshToken: *refreshToken,
@@ -231,14 +236,18 @@ func RefreshTokens(
 	var (
 	    profile_id int
 	    token_id int
-		profile Profile
+		profile model.Profile
+		employment model.Employment
 	)
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		SELECT r.id, r.profile_id, p.id, p.kt, p.first_name, p.last_name
+		SELECT r.id, r.profile_id,
+			p.id, p.kt, p.first_name, p.last_name,
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
 		FROM refresh_token r
 		JOIN profile p ON p.id = r.profile_id
+		JOIN employment e ON p.id = e.profile_id
 		WHERE r.token_hash = $1 AND r.device_id = $2 AND r.expires_at > now()
 		`,
 		hash,
@@ -246,6 +255,17 @@ func RefreshTokens(
 	).Scan(
 		&token_id,
 		&profile_id,
+		&profile.ID,
+		&profile.KT,
+		&profile.FirstName,
+		&profile.LastName,
+		&employment.Id,
+		&employment.ProfileId,
+		&employment.CompanyId,
+		&employment.ContractId,
+		&employment.Role,
+		&employment.StartDate,
+		&employment.EndDate,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: db select: %w", err)
@@ -263,10 +283,15 @@ func RefreshTokens(
 		RefreshToken: *refresh,
 	}
 
+	profileExtended := ProfileExtended{
+		Profile: profile,
+		Employment: employment,
+	}
+
 	response := AuthResponse{
 		Message: "Silent refresh successful",
 		Tokens: tokens,
-		Profile: profile,
+		ProfileExtended: profileExtended,
 	}
 
 	return &response, nil
@@ -289,16 +314,20 @@ func WarmStartPin(
 		profile_id int
 		pinHash string
 		token_id int
-		profile Profile
+		profile model.Profile
+		employment model.Employment
 	)
 
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		SELECT r.id, u.id, p.pin, u.id, u.kt, u.first_name, u.last_name
+		SELECT r.id, u.id, p.pin,
+			u.id, u.kt, u.first_name, u.last_name, 
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
         FROM profile u
         JOIN refresh_token r ON r.profile_id = u.id
         JOIN profile_pin_auth p ON p.profile_id = u.id
+        JOIN employment e ON e.profile_id = u.id
         WHERE r.token_hash = $1 AND r.device_id = $2
 		`,
 		hashedToken,
@@ -311,6 +340,13 @@ func WarmStartPin(
 		&profile.KT,
 		&profile.FirstName,
 		&profile.LastName,
+		&employment.Id,
+		&employment.ProfileId,
+		&employment.CompanyId,
+		&employment.ContractId,
+		&employment.Role,
+		&employment.StartDate,
+		&employment.EndDate,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: db select: %w", err)
@@ -336,10 +372,15 @@ func WarmStartPin(
 		RefreshToken: *refreshToken,
 	}
 
+	profileExtended := ProfileExtended{
+		Profile: profile,
+		Employment: employment,
+	}
+
 	response := AuthResponse{
 		Message: "Authentication successful",
 		Tokens: tokens,
-		Profile: profile,
+		ProfileExtended: profileExtended,
 	}
 
 	return &response, nil
