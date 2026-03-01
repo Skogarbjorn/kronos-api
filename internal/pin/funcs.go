@@ -217,7 +217,7 @@ func GetLocations(
 		JOIN workspace w ON w.id = l.workspace_id
 		JOIN company c ON w.id = c.workspace_id
 		JOIN employment e ON c.id = e.company_id
-		WHERE e.profile_id = $2
+		WHERE e.profile_id = $1
 		`,
 		profile_id,
 	)
