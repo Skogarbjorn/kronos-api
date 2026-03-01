@@ -117,7 +117,12 @@ func GetShiftOverview(
 	err := db.QueryRowContext(
 		ctx,
 		`
-		SELECT s.id, s.profile_id, s.task_id, s.start_ts, w.name, c.name, l.name, t.name 
+		SELECT 
+			s.id, s.profile_id, s.task_id, s.start_ts,
+			w.id, w.name,
+			c.id, c.workspace_id, c.name,
+			l.id, l.workspace_id, l.name, l.address,
+			t.id, t.location_id, t.company_id, t.name, t.description, t.is_completed
 		FROM shift s
 		JOIN task t ON t.id = s.task_id
 		JOIN location l ON l.id = t.location_id
@@ -132,10 +137,21 @@ func GetShiftOverview(
 		&shiftOverview.Shift.ProfileId,
 		&shiftOverview.Shift.TaskId,
 		&shiftOverview.Shift.StartTs,
-		&shiftOverview.Workspace,
-		&shiftOverview.Company,
-		&shiftOverview.Location,
-		&shiftOverview.Task,
+		&shiftOverview.Workspace.Id,
+		&shiftOverview.Workspace.Name,
+		&shiftOverview.Company.Id,
+		&shiftOverview.Company.WorkspaceId,
+		&shiftOverview.Company.Name,
+		&shiftOverview.Location.Id,
+		&shiftOverview.Location.WorkspaceId,
+		&shiftOverview.Location.Name,
+		&shiftOverview.Location.Address,
+		&shiftOverview.Task.Id,
+		&shiftOverview.Task.LocationId,
+		&shiftOverview.Task.CompanyId,
+		&shiftOverview.Task.Name,
+		&shiftOverview.Task.Description,
+		&shiftOverview.Task.IsCompleted,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -189,16 +205,21 @@ func GetShiftHistory(
 func GetLocations(
 	ctx context.Context,
 	db *sql.DB,
-	workspace_id int,
 ) (*[]model.Location, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
 	locations := []model.Location{}
 	rows, err := db.Query(
 		`
-		SELECT id, name, address, workspace_id
-		FROM location
-		WHERE workspace_id = $1
+		SELECT l.id, l.name, l.address, l.workspace_id
+		FROM location l
+		JOIN workspace w ON w.id = l.workspace_id
+		JOIN company c ON w.id = c.workspace_id
+		JOIN employment e ON c.id = e.company_id
+		WHERE e.profile_id = $2
 		`,
-		workspace_id,
+		profile_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("GetLocations: db select: %w", err)
@@ -225,18 +246,22 @@ func GetLocations(
 func GetTasks(
 	ctx context.Context,
 	db *sql.DB,
-	company_id   int,
 	location_id *int,
 ) (*[]model.Task, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
 	tasks := []model.Task{}
 	rows, err := db.Query(
 		`
-		SELECT id, name, description, is_completed, location_id, company_id
-		FROM task
-		WHERE company_id = $1
+		SELECT t.id, t.name, t.description, t.is_completed, t.location_id, t.company_id
+		FROM task t
+		JOIN company c ON c.id = t.company_id
+		JOIN employment e ON c.id = e.company_id
+		WHERE e.profile_id = $1
 		AND ($2::int IS NULL OR location_id = $2)
 		`,
-		company_id,
+		profile_id,
 		location_id,
 	)
 	if err != nil {

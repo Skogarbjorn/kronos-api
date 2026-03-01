@@ -16,10 +16,10 @@ type ClockOut_R struct {
 
 type ShiftOverview struct {
 	Shift model.Shift `json:"shift"`
-	Workspace string `json:"workspace"`
-	Company string `json:"company"`
-	Location string `json:"location"`
-	Task string `json:"task"`
+	Workspace model.Workspace `json:"workspace"`
+	Company model.Company `json:"company"`
+	Location model.Location `json:"location"`
+	Task model.Task `json:"task"`
 }
 
 type ShiftHistoryFilter struct {
