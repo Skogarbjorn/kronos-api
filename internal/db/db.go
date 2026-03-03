@@ -162,38 +162,12 @@ func DropTables(db *sql.DB) {
 }
 
 func InsertDummy(db *sql.DB) {
-	i_profile := `
-	INSERT INTO profile (kt, first_name, last_name)
-	VALUES (1907032070, 'ragnar bjoern', 'ingvarsson');`
-	i_profile_pin := `
-	INSERT INTO profile_pin_auth (profile_id, pin)
-	VALUES (1, '0311a8ebc9de5629f286b5861092cc55c0a63d2d24e1aa2f7aec3da9b2de41d9');`
-	i_workspace := `
-	INSERT INTO workspace (name)
-	VALUES ('test workspace');`
-	i_location := `
-	INSERT INTO location (name, address, workspace_id)
-	VALUES ('test location', 'test address', 1);`
-	i_company := `
-	INSERT INTO company (name, workspace_id)
-	VALUES ('test company', 1);`
-	i_contract := `
-	INSERT INTO contract (hourly_rate, unpaid_lunch_minutes)
-	VALUES (4500, 30);`
-	i_employment := `
-	INSERT INTO employment (profile_id, company_id, contract_id, role, end_date)
-	VALUES (1, 1, 1, 'worker', now() + interval '30 days');`
-	i_task := `
-	INSERT INTO task (location_id, company_id, name, description, is_completed)
-	VALUES (1, 1, 'test task', 'this is a dummy test task', false);`
-	insert(db, i_profile)
-	insert(db, i_profile_pin)
-	insert(db, i_workspace)
-	insert(db, i_location)
-	insert(db, i_company)
-	insert(db, i_contract)
-	insert(db, i_employment)
-	insert(db, i_task)
+	b, err := os.ReadFile("internal/db/insert.sql")
+	_, err = db.Exec(string(b))
+	if err != nil {
+		log.Fatalf("Failed insert db actions: %v", err)
+	}
+	log.Println("Insert db actions successful")
 }
 
 func MiscDB(db *sql.DB) {

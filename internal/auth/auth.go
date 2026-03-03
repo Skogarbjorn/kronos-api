@@ -135,6 +135,8 @@ func ColdStartPin(
 	db *sql.DB,
 	input ProfilePinAuth,
 ) (*AuthResponse, error) {
+	deviceId := GetDeviceID(ctx)
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("AuthenticateProfile: begin tx: %w", err)
@@ -195,7 +197,7 @@ func ColdStartPin(
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := createRefreshToken(ctx, tx, profile.ID, input.DeviceID)
+	refreshToken, err := createRefreshToken(ctx, tx, profile.ID, deviceId)
 	if err != nil {
 		return nil, err
 	}
@@ -225,6 +227,8 @@ func RefreshTokens(
 	db *sql.DB,
 	input ProfileSilentRefresh,
 ) (*AuthResponse, error) {
+	deviceId := GetDeviceID(ctx)
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: begin tx: %w", err)
@@ -251,7 +255,7 @@ func RefreshTokens(
 		WHERE r.token_hash = $1 AND r.device_id = $2 AND r.expires_at > now()
 		`,
 		hash,
-		input.DeviceID,
+		deviceId,
 	).Scan(
 		&token_id,
 		&profile_id,
@@ -271,7 +275,7 @@ func RefreshTokens(
 		return nil, fmt.Errorf("RefreshTokens: db select: %w", err)
 	}
 
-	access, refresh, err := rotateTokens(ctx, tx, profile_id, input.DeviceID, token_id)
+	access, refresh, err := rotateTokens(ctx, tx, profile_id, deviceId, token_id)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: %w", err)
 	}
@@ -302,6 +306,8 @@ func WarmStartPin(
 	db *sql.DB,
 	input ProfileReAuth,
 ) (*AuthResponse, error) {
+	deviceId := GetDeviceID(ctx)
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: begin tx: %w", err)
@@ -331,7 +337,7 @@ func WarmStartPin(
         WHERE r.token_hash = $1 AND r.device_id = $2
 		`,
 		hashedToken,
-		input.DeviceID,
+		deviceId,
 	).Scan(
 		&token_id,
 		&profile_id,
@@ -360,7 +366,7 @@ func WarmStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile_id, input.DeviceID, token_id)
+	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile_id, deviceId, token_id)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: %w", err)
 	}
@@ -490,6 +496,12 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 				return
 			}
 
+			deviceId := r.Header.Get("X-Device-ID")
+			if deviceId == "" {
+				http.Error(w, "X-Device-ID header required", http.StatusBadRequest)
+				return
+			}
+
 			parts := strings.SplitN(header, " ", 2)
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
@@ -519,8 +531,17 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 				return
 			}
 			
-			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, ClaimsKey, claims)
+			ctx = context.WithValue(ctx, DeviceIdKey, deviceId)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func GetDeviceID(ctx context.Context) string {
+    if val, ok := ctx.Value(DeviceIdKey).(string); ok {
+        return val
+    }
+    return ""
 }

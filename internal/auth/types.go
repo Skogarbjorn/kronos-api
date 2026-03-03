@@ -17,20 +17,17 @@ type ProfileCreate struct {
 }
 
 type ProfileSilentRefresh struct {
-	DeviceID string `json:"device_id"`
 	RefreshToken string `json:"refresh_token"`
 }
 
 type ProfilePinAuth struct {
 	KT       string `json:"kt"`
 	Pin      string `json:"pin"`
-	DeviceID string `json:"device_id"`
 }
 
 type ProfileReAuth struct {
 	Pin          string `json:"pin"`
 	RefreshToken string `json:"refresh_token"`
-	DeviceID     string `json:"device_id"`
 }
 
 type ProfilePasswordAuth struct {
