@@ -53,6 +53,8 @@ type AccessToken struct {
 type ProfileExtended struct {
 	Profile model.Profile `json:"profile"`
 	Employment model.Employment `json:"employment"`
+	Company model.Company `json:"company"`
+	Workspace model.Workspace `json:"workspace"`
 }
 
 type AuthResponse struct {

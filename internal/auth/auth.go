@@ -144,9 +144,11 @@ func ColdStartPin(
 	defer tx.Rollback()
 
 	var (
+		pinHash string
 		profile    model.Profile
 		employment model.Employment
-		pinHash string
+		company model.Company
+		workspace model.Workspace
 	)
 
 	err = tx.QueryRowContext(
@@ -162,6 +164,8 @@ func ColdStartPin(
 		FROM profile u
 		JOIN profile_pin_auth p ON p.profile_id = u.id
 		JOIN employment e ON p.profile_id = u.id
+        JOIN company c ON c.id = e.company_id
+		JOIN workspace w ON w.id = c.workspace_id
 		WHERE u.kt = $1
 		`,
 		input.KT,
@@ -178,6 +182,11 @@ func ColdStartPin(
 		&employment.Role,
 		&employment.StartDate,
 		&employment.EndDate,
+		&company.Id,
+		&company.WorkspaceId,
+		&company.Name,
+		&workspace.Id,
+		&workspace.Name,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrProfileNotFound
@@ -205,6 +214,8 @@ func ColdStartPin(
 	profileExtended := ProfileExtended{
 		Profile: profile,
 		Employment: employment,
+		Company: company,
+		Workspace: workspace,
 	}
 
 	response := AuthResponse{
@@ -242,6 +253,8 @@ func RefreshTokens(
 	    token_id int
 		profile model.Profile
 		employment model.Employment
+		company model.Company
+		workspace model.Workspace
 	)
 	err = tx.QueryRowContext(
 		ctx,
@@ -252,6 +265,8 @@ func RefreshTokens(
 		FROM refresh_token r
 		JOIN profile p ON p.id = r.profile_id
 		JOIN employment e ON p.id = e.profile_id
+        JOIN company c ON c.id = e.company_id
+		JOIN workspace w ON w.id = c.workspace_id
 		WHERE r.token_hash = $1 AND r.device_id = $2 AND r.expires_at > now()
 		`,
 		hash,
@@ -270,6 +285,11 @@ func RefreshTokens(
 		&employment.Role,
 		&employment.StartDate,
 		&employment.EndDate,
+		&company.Id,
+		&company.WorkspaceId,
+		&company.Name,
+		&workspace.Id,
+		&workspace.Name,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: db select: %w", err)
@@ -290,6 +310,8 @@ func RefreshTokens(
 	profileExtended := ProfileExtended{
 		Profile: profile,
 		Employment: employment,
+		Company: company,
+		Workspace: workspace,
 	}
 
 	response := AuthResponse{
@@ -322,6 +344,8 @@ func WarmStartPin(
 		token_id int
 		profile model.Profile
 		employment model.Employment
+		company model.Company
+		workspace model.Workspace
 	)
 
 	err = tx.QueryRowContext(
@@ -329,11 +353,15 @@ func WarmStartPin(
 		`
 		SELECT r.id, u.id, p.pin,
 			u.id, u.kt, u.first_name, u.last_name, 
-			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date,
+			c.id, c.workspace_id, c.name,
+			w.id, w.name
         FROM profile u
         JOIN refresh_token r ON r.profile_id = u.id
         JOIN profile_pin_auth p ON p.profile_id = u.id
         JOIN employment e ON e.profile_id = u.id
+        JOIN company c ON c.id = e.company_id
+		JOIN workspace w ON w.id = c.workspace_id
         WHERE r.token_hash = $1 AND r.device_id = $2
 		`,
 		hashedToken,
@@ -353,6 +381,11 @@ func WarmStartPin(
 		&employment.Role,
 		&employment.StartDate,
 		&employment.EndDate,
+		&company.Id,
+		&company.WorkspaceId,
+		&company.Name,
+		&workspace.Id,
+		&workspace.Name,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: db select: %w", err)
@@ -381,6 +414,8 @@ func WarmStartPin(
 	profileExtended := ProfileExtended{
 		Profile: profile,
 		Employment: employment,
+		Company: company,
+		Workspace: workspace,
 	}
 
 	response := AuthResponse{
