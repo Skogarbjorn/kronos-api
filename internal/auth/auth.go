@@ -155,12 +155,11 @@ func ColdStartPin(
 		ctx,
 		`
 		SELECT
-			u.id,
-			u.kt,
-			u.first_name,
-			u.last_name,
+			u.id, u.kt, u.first_name, u.last_name,
 			p.pin,
-			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date,
+			c.id, c.workspace_id, c.name,
+			w.id, w.name
 		FROM profile u
 		JOIN profile_pin_auth p ON p.profile_id = u.id
 		JOIN employment e ON p.profile_id = u.id
@@ -261,7 +260,9 @@ func RefreshTokens(
 		`
 		SELECT r.id, r.profile_id,
 			p.id, p.kt, p.first_name, p.last_name,
-			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date
+			e.id, e.profile_id, e.company_id, e.contract_id, e.role, e.start_date, e.end_date,
+			c.id, c.workspace_id, c.name,
+			w.id, w.name
 		FROM refresh_token r
 		JOIN profile p ON p.id = r.profile_id
 		JOIN employment e ON p.id = e.profile_id
