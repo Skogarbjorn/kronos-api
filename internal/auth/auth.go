@@ -570,8 +570,6 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, ClaimsKey, claims)
 			ctx = context.WithValue(ctx, DeviceIdKey, deviceId)
-			print("Device Id was ", deviceId)
-			print("Device Id in context was ", ctx.Value(DeviceIdKey).(string))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -579,7 +577,9 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 
 func GetDeviceID(ctx context.Context) string {
     if val, ok := ctx.Value(DeviceIdKey).(string); ok {
+		println("Got Device id!!, ", val)
         return val
     }
+	println("Failed to get device id")
     return ""
 }
