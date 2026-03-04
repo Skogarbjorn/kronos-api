@@ -490,7 +490,7 @@ func createRefreshToken(
 		ctx,
 		`
 		INSERT INTO refresh_token (profile_id, device_id, token_hash, expires_at)
-		VALUES ($1, $2, $3, now() + interval '12 hours')
+		VALUES ($1, $2, $3, now() + interval '10 minutes')
 		ON CONFLICT (profile_id, device_id)
 		DO UPDATE SET
 			token_hash = EXCLUDED.token_hash,
