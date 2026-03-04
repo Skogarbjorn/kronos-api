@@ -505,7 +505,7 @@ func createRefreshToken(
 		return nil, fmt.Errorf("createRefreshToken: db insert: %w", err)
 	}
 
-	expiresAt := time.Now().Add(time.Hour * 12).UnixMilli()
+	expiresAt := time.Now().Add(time.Minute * 10).UnixMilli()
 	return &RefreshToken{ Token: token, ExpiresAt: expiresAt }, nil
 }
 
