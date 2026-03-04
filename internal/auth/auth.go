@@ -571,7 +571,7 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, ClaimsKey, claims)
 			ctx = context.WithValue(ctx, DeviceIdKey, deviceId)
 			print("Device Id was ", deviceId)
-			print("Device Id in context was ", ctx.Value(DeviceIdKey))
+			print("Device Id in context was ", ctx.Value(DeviceIdKey).(string))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
