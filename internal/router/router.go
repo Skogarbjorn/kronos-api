@@ -27,6 +27,8 @@ func CreateRouter(db *sql.DB) http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/checkhealth", checkhealthHandler(db))
 		r.Route("/auth", func(r chi.Router) {
+			r.Use(auth.DeviceIdMiddleware())
+
 			r.Post("/register", auth.RegisterHandler(db))
 			r.Post("/login", auth.LoginHandler(db))
 			r.Post("/refresh", auth.SilentRefreshHandler(db))
@@ -44,6 +46,7 @@ func CreateRouter(db *sql.DB) http.Handler {
 
 		r.Route("/pin", func(r chi.Router) {
 			r.Use(auth.PinAuthMiddleware([]byte(os.Getenv("JWT_SECRET"))))
+			r.Use(auth.DeviceIdMiddleware())
 
 			r.Post("/clock-in", pin.ClockInHandler(db))
 			r.Post("/clock-out", pin.ClockOutHandler(db))

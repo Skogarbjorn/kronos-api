@@ -532,12 +532,6 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 				return
 			}
 
-			deviceId := r.Header.Get("X-Device-ID")
-			if deviceId == "" {
-				http.Error(w, "X-Device-ID header required", http.StatusBadRequest)
-				return
-			}
-
 			parts := strings.SplitN(header, " ", 2)
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
@@ -569,6 +563,21 @@ func PinAuthMiddleware(secret []byte) func(http.Handler) http.Handler {
 			
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, ClaimsKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func DeviceIdMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			deviceId := r.Header.Get("X-Device-ID")
+			if deviceId == "" {
+				http.Error(w, "X-Device-ID header required", http.StatusBadRequest)
+				return
+			}
+
+			ctx := r.Context()
 			ctx = context.WithValue(ctx, DeviceIdKey, deviceId)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
