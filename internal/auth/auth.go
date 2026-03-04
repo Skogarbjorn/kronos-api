@@ -455,7 +455,7 @@ func createAccessToken(
 	profile_id int,
 	auth string,
 ) (*AccessToken, error) {
-	expiresAt := time.Now().Add(time.Hour)
+	expiresAt := time.Now().Add(time.Minute * 5)
 	claims := Claims{
 		ProfileID: profile_id,
 		Auth: auth,
