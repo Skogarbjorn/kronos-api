@@ -470,7 +470,7 @@ func createAccessToken(
 		return nil, fmt.Errorf("createAccessToken: sign jwt: %w", err)
 	}
 
-	return &AccessToken{ Token: accessTokenString, ExpiresAt: expiresAt.Unix() }, nil
+	return &AccessToken{ Token: accessTokenString, ExpiresAt: expiresAt.UnixMilli() }, nil
 }
 
 func createRefreshToken(
@@ -505,7 +505,7 @@ func createRefreshToken(
 		return nil, fmt.Errorf("createRefreshToken: db insert: %w", err)
 	}
 
-	expiresAt := time.Now().Add(time.Hour * 12).Unix()
+	expiresAt := time.Now().Add(time.Hour * 12).UnixMilli()
 	return &RefreshToken{ Token: token, ExpiresAt: expiresAt }, nil
 }
 
