@@ -106,6 +106,49 @@ func ClockOut(
 	return &shift, nil
 }
 
+func SyncShift(
+	ctx context.Context,
+	db *sql.DB,
+	input model.Shift,
+) (*model.Shift, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("ClockIn: begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	var shift model.Shift
+	err = tx.QueryRowContext(
+		ctx,
+		`
+		INSERT INTO shift (profile_id, task_id, start_ts, end_ts)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, profile_id, task_id, start_ts, end_ts
+		`,
+		profile_id,
+		input.TaskId,
+		input.StartTs,
+		input.EndTs,
+	).Scan(
+		&shift.Id,
+		&shift.ProfileId,
+		&shift.TaskId,
+		&shift.StartTs,
+		&shift.EndTs,
+	)
+	if err != nil {
+		return nil, translateDBError(err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("SyncShift: db commit: %w", err)
+	}
+
+	return &shift, nil
+}
+
 func GetShiftOverview(
 	ctx context.Context,
 	db *sql.DB,

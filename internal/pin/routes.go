@@ -25,6 +25,14 @@ func ClockOutHandler(db *sql.DB) http.HandlerFunc {
 	)
 }
 
+func SyncShiftHandler(db *sql.DB) http.HandlerFunc {
+	return abstractions.CreateJSONHandler(
+		db,
+		SyncShift,
+		WriteDomainError,
+	)
+}
+
 func ShiftOverviewHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		result, err := GetShiftOverview(r.Context(), db)
