@@ -1,8 +1,8 @@
 INSERT INTO profile (kt, first_name, last_name)
-VALUES (1907032070, 'ragnar bjoern', 'ingvarsson');
+VALUES (1, 'ragnar bjoern', 'ingvarsson');
 
 INSERT INTO profile (kt, first_name, last_name)
-VALUES (1907032071, 'gamer epic', 'super');
+VALUES (2, 'gamer epic', 'super');
 
 INSERT INTO profile_pin_auth (profile_id, pin)
 VALUES (1, '0311a8ebc9de5629f286b5861092cc55c0a63d2d24e1aa2f7aec3da9b2de41d9');

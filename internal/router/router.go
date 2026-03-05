@@ -36,12 +36,21 @@ func CreateRouter(db *sql.DB) http.Handler {
 		})
 
 		r.Route("/manage", func(r chi.Router) {
-			r.Post("/workspace", manage.CreateWorkspaceHandler(db))
-			r.Post("/company", manage.CreateCompanyHandler(db))
-			r.Post("/location", manage.CreateLocationHandler(db))
-			r.Post("/task", manage.CreateTaskHandler(db))
-			r.Post("/contract", manage.CreateContractHandler(db))
+			r.Post("/workspace",  manage.CreateWorkspaceHandler(db))
+			r.Post("/company",    manage.CreateCompanyHandler(db))
+			r.Post("/location",   manage.CreateLocationHandler(db))
+			r.Post("/task",       manage.CreateTaskHandler(db))
+			r.Post("/contract",   manage.CreateContractHandler(db))
 			r.Post("/employment", manage.CreateEmploymentHandler(db))
+
+			r.Get("/workspaces",  manage.GetWorkspacesHandler(db))
+			r.Get("/companies",   manage.GetCompaniesHandler(db))
+			r.Get("/locations",   manage.GetLocationsHandler(db))
+			r.Get("/tasks",       manage.GetTasksHandler(db))
+			r.Get("/profiles",    manage.GetProfilesHandler(db))
+			r.Get("/employments",    manage.GetEmploymentsHandler(db))
+			r.Get("/contracts",    manage.GetContractsHandler(db))
+			r.Get("/shifts",      manage.GetShiftsHandler(db))
 		})
 
 		r.Route("/pin", func(r chi.Router) {
