@@ -119,15 +119,11 @@ func GetShiftOverview(
 		`
 		SELECT 
 			s.id, s.profile_id, s.task_id, s.start_ts,
-			w.id, w.name,
-			c.id, c.workspace_id, c.name,
 			l.id, l.workspace_id, l.name, l.address,
 			t.id, t.location_id, t.company_id, t.name, t.description, t.is_completed
 		FROM shift s
 		JOIN task t ON t.id = s.task_id
 		JOIN location l ON l.id = t.location_id
-		JOIN company c ON c.id = t.company_id
-		JOIN workspace w ON w.id = c.workspace_id
 		WHERE s.profile_id = $1
 		AND s.end_ts IS NULL
 		`,
@@ -137,11 +133,6 @@ func GetShiftOverview(
 		&shiftOverview.Shift.ProfileId,
 		&shiftOverview.Shift.TaskId,
 		&shiftOverview.Shift.StartTs,
-		&shiftOverview.Workspace.Id,
-		&shiftOverview.Workspace.Name,
-		&shiftOverview.Company.Id,
-		&shiftOverview.Company.WorkspaceId,
-		&shiftOverview.Company.Name,
 		&shiftOverview.Location.Id,
 		&shiftOverview.Location.WorkspaceId,
 		&shiftOverview.Location.Name,

@@ -16,8 +16,6 @@ type ClockOut_R struct {
 
 type ShiftOverview struct {
 	Shift model.Shift `json:"shift"`
-	Workspace model.Workspace `json:"workspace"`
-	Company model.Company `json:"company"`
 	Location model.Location `json:"location"`
 	Task model.Task `json:"task"`
 }
