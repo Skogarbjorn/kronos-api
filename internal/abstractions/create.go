@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -29,6 +30,7 @@ func CreateJSONHandler[I any, O any](
 		var input I
 
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
