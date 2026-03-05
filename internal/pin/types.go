@@ -14,6 +14,15 @@ type ClockOut_R struct {
 	EndTs        *time.Time `json:"end_ts"`
 }
 
+type SyncShift_R struct {
+	RemoteId  *int      `json:"remote_id"`
+	LocalId   int       `json:"local_id"`
+	ProfileId int       `json:"profile_id"`
+	TaskId    int       `json:"task_id"`
+	StartTs   time.Time `json:"start_ts"`
+	EndTs    *time.Time `json:"end_ts"`
+}
+
 type ShiftOverview struct {
 	Shift model.Shift `json:"shift"`
 	Location model.Location `json:"location"`
