@@ -120,7 +120,7 @@ func SyncShift(
 	}
 	defer tx.Rollback()
 
-	var idToInsert interface{}
+	var idToInsert any
 	if input.RemoteId != nil {
 		idToInsert = *input.RemoteId
 	} else {
@@ -134,9 +134,9 @@ func SyncShift(
 		INSERT INTO shift (id, profile_id, task_id, start_ts, end_ts)
 		VALUES (COALESCE($1, nextval(pg_get_serial_sequence('shift', 'id'))), $2, $3, $4, $5)
 		ON CONFLICT (id) DO UPDATE SET
-			task_id = EXCLUDED.task_id
-			start_ts = EXCLUDED.start_ts
-			end_ts = EXCLUDED.end_ts
+			task_id = EXCLUDED.task_id,
+			start_ts = EXCLUDED.start_ts,
+			end_ts = EXCLUDED.end_ts,
 			profile_id = EXCLUDED.profile_id
 		RETURNING id, profile_id, task_id, start_ts, end_ts
 		`,
