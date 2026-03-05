@@ -162,7 +162,7 @@ func ColdStartPin(
 			w.id, w.name
 		FROM profile u
 		JOIN profile_pin_auth p ON p.profile_id = u.id
-		JOIN employment e ON p.profile_id = u.id
+		JOIN employment e ON u.id = e.profile_id
         JOIN company c ON c.id = e.company_id
 		JOIN workspace w ON w.id = c.workspace_id
 		WHERE u.kt = $1
