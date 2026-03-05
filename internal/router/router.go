@@ -51,6 +51,14 @@ func CreateRouter(db *sql.DB) http.Handler {
 			r.Get("/employments",    manage.GetEmploymentsHandler(db))
 			r.Get("/contracts",    manage.GetContractsHandler(db))
 			r.Get("/shifts",      manage.GetShiftsHandler(db))
+
+			r.Delete("/workspaces/{id}",  manage.DeleteWorkspaceHandler(db))
+			r.Delete("/companies/{id}",   manage.DeleteCompanyHandler(db))
+			r.Delete("/locations/{id}",   manage.DeleteLocationHandler(db))
+			r.Delete("/tasks/{id}",       manage.DeleteTaskHandler(db))
+			r.Delete("/profiles/{id}",    manage.DeleteProfileHandler(db))
+			r.Delete("/contracts/{id}",   manage.DeleteContractHandler(db))
+			r.Delete("/shifts/{id}",      manage.DeleteShiftHandler(db))
 		})
 
 		r.Route("/pin", func(r chi.Router) {
