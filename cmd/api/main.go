@@ -6,7 +6,7 @@ import (
 	"os"
 	"test/internal/router"
 
-	dbrepo "test/internal/db"
+	//dbrepo "test/internal/db"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -33,10 +33,10 @@ func main() {
 
 	log.Println("Connected to PostgreSQL successfully!")
 
-	dbrepo.DropTables(db)
-	dbrepo.CreateTables(db)
-	dbrepo.InsertDummy(db)
-	dbrepo.MiscDB(db)
+	//dbrepo.DropTables(db)
+	//dbrepo.CreateTables(db)
+	//dbrepo.InsertDummy(db)
+	//dbrepo.MiscDB(db)
 
 	r := router.CreateRouter(db)
 

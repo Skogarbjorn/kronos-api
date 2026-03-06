@@ -1,6 +1,9 @@
 package manage
 
-import "test/internal/model"
+import (
+	"test/internal/model"
+	"time"
+)
 
 type WorkspaceCreate struct {
 	Name string `json:"name"`
@@ -35,4 +38,46 @@ type EmploymentCreate struct {
 type ContractCreate struct {
 	HourlyRate         int `json:"hourly_rate"`
 	UnpaidLunchMinutes int `json:"unpaid_lunch_minutes"`
+}
+
+type WorkspacePatch struct {
+	Name *string `json:"name"`
+}
+
+type CompanyPatch struct {
+	Name *string `json:"name"`
+}
+
+type LocationPatch struct {
+    Name    *string `json:"name"`
+    Address *string `json:"address"`
+}
+
+type TaskPatch struct {
+    Name        *string `json:"name"`
+    Description *string `json:"description"`
+    IsCompleted *bool `json:"is_completed"`
+    LocationId  *int `json:"location_id"`
+}
+
+type EmploymentPatch struct {
+    ContractId *int `json:"contract_id"`
+    Role       *model.Role `json:"role"`
+}
+
+type ContractPatch struct {
+    HourlyRate         *int `json:"hourly_rate"`
+    UnpaidLunchMinutes *int `json:"unpaid_lunch_minutes"`
+}
+
+type ShiftPatch struct {
+	StartTs *time.Time `json:"start_ts"`
+	EndTs   *time.Time `json:"end_ts"`
+	TaskId  *int       `json:"task_id"`
+}
+
+type ProfilePatch struct {
+	KT        *string `json:"kt"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
 }

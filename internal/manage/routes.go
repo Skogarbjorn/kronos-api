@@ -3,6 +3,7 @@ package manage
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"test/internal/abstractions"
@@ -261,6 +262,222 @@ func DeleteShiftHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		result, err := DeleteShift(r.Context(), db, id)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchWorkspaceHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input WorkspacePatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchWorkspace(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchCompanyHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input CompanyPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchCompany(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchLocationHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input LocationPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchLocation(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchTaskHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input TaskPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchTask(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchEmploymentHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input EmploymentPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchEmployment(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchContractHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input ContractPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchContract(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchProfileHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input ProfilePatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchProfile(r.Context(), db, id, input)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func PatchShiftHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		var input ShiftPatch
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			fmt.Printf("Decode error: %v\n", err)
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+
+		result, err := PatchShift(r.Context(), db, id, input)
 		if err != nil {
 			WriteDomainError(w, err)
 			return
