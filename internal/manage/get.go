@@ -246,7 +246,7 @@ func GetShifts(
 	shifts := []model.Shift{}
 	rows, err := db.Query(
 		`
-		SELECT id, profile_id, task_id, start_ts, end_ts
+		SELECT id, profile_id, task_id, start_ts, end_ts, s_latitude, s_longitude, e_latitude, e_longitude
 		FROM shift
 		`,
 	)
@@ -262,6 +262,10 @@ func GetShifts(
 			&shift.TaskId,
 			&shift.StartTs,
 			&shift.EndTs,
+			&shift.SLatitude,
+			&shift.SLongitude,
+			&shift.ELatitude,
+			&shift.ELongitude,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("GetShifts: db scan: %w", err)

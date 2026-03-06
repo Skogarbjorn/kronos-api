@@ -8,6 +8,10 @@ type Shift struct {
 	TaskId    int       `json:"task_id"`
 	StartTs   time.Time `json:"start_ts"`
 	EndTs    *time.Time `json:"end_ts"`
+	SLatitude  *float64   `json:"s_latitude"`
+	SLongitude *float64   `json:"s_longitude"`
+	ELatitude  *float64   `json:"e_latitude"`
+	ELongitude *float64   `json:"e_longitude"`
 }
 
 type Company struct {

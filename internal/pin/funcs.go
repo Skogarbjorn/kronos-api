@@ -35,7 +35,7 @@ func ClockIn(
 		`
 		INSERT INTO shift (profile_id, task_id, start_ts)
 		VALUES ($1, $2, $3)
-		RETURNING id, profile_id, task_id, start_ts
+		RETURNING id, profile_id, task_id, start_ts, s_latitude, s_longitude
 		`,
 		profile_id,
 		input.TaskId,
@@ -45,6 +45,8 @@ func ClockIn(
 		&shift.ProfileId,
 		&shift.TaskId,
 		&shift.StartTs,
+		&shift.SLatitude,
+		&shift.SLongitude,
 	)
 	if err != nil {
 		return nil, translateDBError(err)
@@ -82,7 +84,7 @@ func ClockOut(
 		UPDATE shift 
 		SET end_ts = $1
 		WHERE end_ts IS NULL AND profile_id = $2
-		RETURNING id, profile_id, task_id, start_ts, end_ts
+		RETURNING id, profile_id, task_id, start_ts, end_ts, s_latitude, s_longitude, e_latitude, e_longitude
 		`,
 		input.EndTs,
 		profile_id,
@@ -92,6 +94,10 @@ func ClockOut(
 		&shift.TaskId,
 		&shift.StartTs,
 		&shift.EndTs,
+		&shift.SLatitude,
+		&shift.SLongitude,
+		&shift.ELatitude,
+		&shift.ELongitude,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -131,26 +137,38 @@ func SyncShift(
 	err = tx.QueryRowContext(
 		ctx,
 		`
-		INSERT INTO shift (id, profile_id, task_id, start_ts, end_ts)
-		VALUES (COALESCE($1, nextval(pg_get_serial_sequence('shift', 'id'))), $2, $3, $4, $5)
+		INSERT INTO shift (id, profile_id, task_id, start_ts, end_ts, s_latitude, s_longitude, e_latitude, e_longitude)
+		VALUES (COALESCE($1, nextval(pg_get_serial_sequence('shift', 'id'))), $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (id) DO UPDATE SET
 			task_id = EXCLUDED.task_id,
 			start_ts = EXCLUDED.start_ts,
 			end_ts = EXCLUDED.end_ts,
-			profile_id = EXCLUDED.profile_id
-		RETURNING id, profile_id, task_id, start_ts, end_ts
+			profile_id = EXCLUDED.profile_id,
+			s_latitude = EXCLUDED.s_latitude,
+			s_longitude = EXCLUDED.s_longitude,
+			e_latitude = EXCLUDED.e_latitude,
+			e_longitude = EXCLUDED.e_longitude
+		RETURNING id, profile_id, task_id, start_ts, end_ts, s_latitude, s_longitude, e_latitude, e_longitude
 		`,
 		idToInsert,
 		profile_id,
 		input.TaskId,
 		input.StartTs,
 		input.EndTs,
+		input.SLatitude,
+		input.SLongitude,
+		input.ELatitude,
+		input.ELongitude,
 	).Scan(
 		&shift.Id,
 		&shift.ProfileId,
 		&shift.TaskId,
 		&shift.StartTs,
 		&shift.EndTs,
+		&shift.SLatitude,
+		&shift.SLongitude,
+		&shift.ELatitude,
+		&shift.ELongitude,
 	)
 	if err != nil {
 		return nil, translateDBError(err)
@@ -174,7 +192,7 @@ func GetShiftOverview(
 		ctx,
 		`
 		SELECT 
-			s.id, s.profile_id, s.task_id, s.start_ts,
+			s.id, s.profile_id, s.task_id, s.start_ts, s.s_latitude, s.s_longitude,
 			l.id, l.workspace_id, l.name, l.address,
 			t.id, t.location_id, t.company_id, t.name, t.description, t.is_completed
 		FROM shift s
@@ -189,6 +207,8 @@ func GetShiftOverview(
 		&shiftOverview.Shift.ProfileId,
 		&shiftOverview.Shift.TaskId,
 		&shiftOverview.Shift.StartTs,
+		&shiftOverview.Shift.SLatitude,
+		&shiftOverview.Shift.SLongitude,
 		&shiftOverview.Location.Id,
 		&shiftOverview.Location.WorkspaceId,
 		&shiftOverview.Location.Name,
@@ -220,7 +240,7 @@ func GetShiftHistory(
 	shifts := []model.Shift{}
 	rows, err := db.Query(
 		`
-		SELECT s.id, s.profile_id, s.task_id, s.start_ts, s.end_ts
+		SELECT s.id, s.profile_id, s.task_id, s.start_ts, s.end_ts, s.s_latitude, s.s_longitude, s.e_latitude, s.e_longitude
 		FROM shift s
 		WHERE s.profile_id = $1
 		`,
@@ -238,6 +258,10 @@ func GetShiftHistory(
 			&shift.TaskId,
 			&shift.StartTs,
 			&shift.EndTs,
+			&shift.SLatitude,
+			&shift.SLongitude,
+			&shift.ELatitude,
+			&shift.ELongitude,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("GetShiftHistory: db scan: %w", err)
