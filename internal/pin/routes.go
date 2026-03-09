@@ -48,7 +48,55 @@ func ShiftOverviewHandler(db *sql.DB) http.HandlerFunc {
 
 func ShiftHistoryHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		result, err := GetShiftHistory(r.Context(), db)
+		s_location_id := r.URL.Query().Get("location_id")
+		var location_id *int
+
+		if s_location_id != "" {
+			parsed, err := strconv.Atoi(s_location_id)
+			if err != nil {
+				http.Error(w, "location_id must be an integer", http.StatusBadRequest)
+				return
+			}
+			location_id = &parsed
+		}
+
+		s_task_id := r.URL.Query().Get("task_id")
+		var task_id *int
+
+		if s_task_id != "" {
+			parsed, err := strconv.Atoi(s_task_id)
+			if err != nil {
+				http.Error(w, "task_id must be an integer", http.StatusBadRequest)
+				return
+			}
+			task_id = &parsed
+		}
+
+		s_month := r.URL.Query().Get("month")
+		var month *int
+
+		if s_month != "" {
+			parsed, err := strconv.Atoi(s_month)
+			if err != nil {
+				http.Error(w, "month must be an integer", http.StatusBadRequest)
+				return
+			}
+			month = &parsed
+		}
+
+		s_year := r.URL.Query().Get("year")
+		var year *int
+
+		if s_year != "" {
+			parsed, err := strconv.Atoi(s_year)
+			if err != nil {
+				http.Error(w, "year must be an integer", http.StatusBadRequest)
+				return
+			}
+			year = &parsed
+		}
+
+		result, err := GetShiftHistory(r.Context(), db, month, year, location_id, task_id)
 		if err != nil {
 			WriteDomainError(w, err)
 			return

@@ -201,14 +201,7 @@ func ColdStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, err := createAccessToken(profile.ID, "pin")
-	if err != nil {
-		return nil, err
-	}
-	refreshToken, err := createRefreshToken(ctx, tx, profile.ID, deviceId)
-	if err != nil {
-		return nil, err
-	}
+	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile.ID, deviceId)
 
 	profileExtended := ProfileExtended{
 		Profile: profile,
@@ -296,7 +289,7 @@ func RefreshTokens(
 		return nil, fmt.Errorf("RefreshTokens: db select: %w", err)
 	}
 
-	access, refresh, err := rotateTokens(ctx, tx, profile_id, deviceId, token_id)
+	access, refresh, err := rotateTokens(ctx, tx, profile_id, deviceId)
 	if err != nil {
 		return nil, fmt.Errorf("RefreshTokens: %w", err)
 	}
@@ -400,7 +393,7 @@ func WarmStartPin(
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile_id, deviceId, token_id)
+	accessToken, refreshToken, err := rotateTokens(ctx, tx, profile_id, deviceId)
 	if err != nil {
 		return nil, fmt.Errorf("WarmStartPin: %w", err)
 	}
@@ -433,14 +426,14 @@ func rotateTokens(
 	tx *sql.Tx,
 	profile_id int,
 	device_id string,
-	old_token_id int,
 ) (*AccessToken, *RefreshToken, error) {
 	_, err := tx.ExecContext(
 		ctx,
 		`
-		DELETE FROM refresh_token WHERE id = $1
+		DELETE FROM refresh_token WHERE profile_id = $1 AND device_id = $2
 		`,
-		old_token_id,
+		profile_id,
+		device_id,
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("rotateTokens: %w", err)

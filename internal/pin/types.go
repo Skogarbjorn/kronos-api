@@ -28,23 +28,27 @@ type SyncShift_R struct {
 }
 
 type ShiftOverview struct {
-	Shift model.Shift `json:"shift"`
+	Shift    model.Shift    `json:"shift"`
 	Location model.Location `json:"location"`
-	Task model.Task `json:"task"`
+	Task     model.Task     `json:"task"`
 }
 
-type ShiftHistoryFilter struct {
-	WorkspaceId *int       `json:"workspace_id"`
-	CompanyId   *int       `json:"company_id"`
-	LocationId  *int       `json:"location_id"`
-	TaskId      *int       `json:"task_id"`
-	StartTs     *time.Time `json:"start_ts"`
-	EndTs       *time.Time `json:"end_ts"`
+type ShiftHistoryResponse struct {
+	Shifts   []model.Shift     `json:"shifts"`
+	Metadata   HistoryMetadata `json:"metadata"`
+}
+
+type HistoryMetadata struct {
+	Month     int  `json:"month"`
+	Year      int  `json:"year"`
+	HasMore   bool `json:"has_more"`
+	NextMonth int  `json:"next_month"`
+	NextYear  int  `json:"next_year"`
 }
 
 type EmploymentDetailed struct {
-	Workspace model.Workspace
-	Company model.Company
+	Workspace  model.Workspace
+	Company    model.Company
 	Employment model.Employment
-	Contract model.Contract
+	Contract   model.Contract
 }

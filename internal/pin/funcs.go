@@ -233,18 +233,39 @@ func GetShiftOverview(
 func GetShiftHistory(
 	ctx context.Context,
 	db *sql.DB,
-) (*[]model.Shift, error) {
+	month *int,
+	year *int,
+	location_id *int,
+	task_id *int,
+) (*ShiftHistoryResponse, error) {
 	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
 	profile_id := claims.ProfileID
+
+	var start, end *time.Time
+	if month != nil && year != nil {
+		s, e := GetMonthRange(*year, *month)
+		start = &s
+		end = &e
+	}
 
 	shifts := []model.Shift{}
 	rows, err := db.Query(
 		`
 		SELECT s.id, s.profile_id, s.task_id, s.start_ts, s.end_ts, s.s_latitude, s.s_longitude, s.e_latitude, s.e_longitude
 		FROM shift s
+		JOIN task t ON t.id = s.task_id
 		WHERE s.profile_id = $1
+			AND ($2::timestamptz IS NULL OR s.start_ts >= $2)
+			AND ($3::timestamptz IS NULL OR s.start_ts < $3)
+			AND ($4::int IS NULL OR t.location_id = $4)
+			AND ($5::int IS NULL OR s.task_id = $5)
+		ORDER BY s.start_ts DESC
 		`,
 		profile_id,
+		start,
+		end,
+		location_id,
+		task_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("GetShiftHistory: db select: %w", err)
@@ -270,7 +291,30 @@ func GetShiftHistory(
 		shifts = append(shifts, shift)
 	}
 
-	return &shifts, nil
+	m := 0
+	y := 0
+	if month != nil { m = *month }
+	if year  != nil { y = *year }
+
+	nextM := m - 1
+	nextY := y
+	if nextM == 0 {
+		nextM = 12
+		nextY = y - 1
+	}
+
+	hasMore := len(shifts) > 0
+
+	return &ShiftHistoryResponse{
+		Shifts: shifts,
+		Metadata: HistoryMetadata{
+			Month: m,
+			Year: y,
+			HasMore: hasMore,
+			NextMonth: nextM,
+			NextYear: nextY,
+		},
+	}, nil
 }
 
 func GetLocations(
@@ -434,4 +478,10 @@ func GetEmploymentsDetailed(
 	}
 
 	return &employments, nil
+}
+
+func GetMonthRange(year, month int) (time.Time, time.Time) {
+    start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+    end := start.AddDate(0, 1, 0) 
+    return start, end
 }
