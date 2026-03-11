@@ -261,7 +261,7 @@ func RefreshTokens(
 		JOIN employment e ON p.id = e.profile_id
         JOIN company c ON c.id = e.company_id
 		JOIN workspace w ON w.id = c.workspace_id
-		WHERE r.token_hash = $1 AND r.device_id = $2 AND r.expires_at > now()
+		WHERE r.token_hash = $1 AND r.device_id = $2
 		`,
 		hash,
 		deviceId,
