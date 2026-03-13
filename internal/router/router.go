@@ -23,9 +23,9 @@ func CreateRouter(db *sql.DB) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://kronos-website-production-0d7c.up.railway.app/", "http://localhost:3000"},
+		AllowedOrigins:   []string{"https://kronos-website-production-0d7c.up.railway.app", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Device-ID"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
