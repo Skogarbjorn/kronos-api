@@ -157,3 +157,16 @@ func GetEmploymentsDetailedHandler(db *sql.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(result)
 	}
 }
+
+func GetPinHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := GetPin(r.Context(), db)
+		if err != nil {
+			WriteDomainError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}

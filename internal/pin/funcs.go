@@ -480,6 +480,32 @@ func GetEmploymentsDetailed(
 	return &employments, nil
 }
 
+func GetPin(
+	ctx context.Context,
+	db *sql.DB,
+) (*string, error) {
+	claims := ctx.Value(auth.ClaimsKey).(*auth.Claims)
+	profile_id := claims.ProfileID
+
+	var pinHash string
+	err := db.QueryRowContext(
+		ctx,
+		`
+		SELECT pin
+		FROM profile_pin_auth
+		WHERE profile_id = $1
+		`,
+		profile_id,
+	).Scan(
+		&pinHash,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetPin: db select: %w", err)
+	}
+
+	return &pinHash, nil
+}
+
 func GetMonthRange(year, month int) (time.Time, time.Time) {
     start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
     end := start.AddDate(0, 1, 0) 
