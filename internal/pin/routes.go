@@ -170,3 +170,11 @@ func GetPinHandler(db *sql.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(result)
 	}
 }
+
+func PostEditRequestHandler(db *sql.DB) http.HandlerFunc {
+	return abstractions.CreateJSONHandler(
+		db,
+		PostEditRequest,
+		WriteDomainError, //also validate that sender is owner of shift
+	)
+}

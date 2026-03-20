@@ -91,6 +91,7 @@ func CreateRouter(db *sql.DB) http.Handler {
 			r.Get("/tasks", pin.GetTasksHandler(db))
 			r.Get("/employments-detailed", pin.GetEmploymentsDetailedHandler(db))
 			r.Get("/my-pin", pin.GetPinHandler(db))
+			r.Post("/send-edit-request", pin.PostEditRequestHandler(db))
 		})
 	})
 
