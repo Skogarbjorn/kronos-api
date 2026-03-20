@@ -112,3 +112,17 @@ CREATE TABLE IF NOT EXISTS refresh_token (
     FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
     UNIQUE(profile_id, device_id)
 );
+
+CREATE TABLE IF NOT EXISTS edit_request (
+	id       SERIAL PRIMARY KEY,
+	shift_id INT NOT NULL,
+	task_id  INT,
+	start_ts TIMESTAMPTZ,
+	end_ts   TIMESTAMPTZ,
+	reason   TEXT,
+    status VARCHAR(20) CHECK (status IN ('pending', 'rejected', 'approved')) DEFAULT 'pending',
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (shift_id) REFERENCES shift(id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES task(id)
+);

@@ -27,6 +27,14 @@ type SyncShift_R struct {
 	ELongitude *float64   `json:"e_longitude"`
 }
 
+type EditRequest_R struct {
+	ShiftId  int       `json:"shift_id"`
+	TaskId  *int       `json:"task_id"`
+	StartTs *time.Time `json:"start_ts"`
+	EndTs   *time.Time `json:"end_ts"`
+	Reason   string    `json:"reason"`
+}
+
 type ShiftOverview struct {
 	Shift    model.Shift    `json:"shift"`
 	Location model.Location `json:"location"`

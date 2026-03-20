@@ -506,6 +506,49 @@ func GetPin(
 	return &pinHash, nil
 }
 
+func PostEditRequest(
+	ctx context.Context,
+	db *sql.DB,
+	input EditRequest_R,
+) (*model.EditRequest, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("PostEditRequest: begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	var edit_request model.EditRequest
+	err = tx.QueryRowContext(
+		ctx,
+		`
+		INSERT INTO edit_request (shift_id, task_id, start_ts, end_ts, reason)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, shift_id, task_id, start_ts, end_ts, reason, status
+		`,
+		input.ShiftId,
+		input.TaskId,
+		input.StartTs,
+		input.EndTs,
+		input.Reason,
+	).Scan(
+		&edit_request.Id,
+		&edit_request.ShiftId,
+		&edit_request.TaskId,
+		&edit_request.StartTs,
+		&edit_request.EndTs,
+		&edit_request.Reason,
+		&edit_request.Status,
+	)
+	if err != nil {
+		return nil, translateDBError(err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("PostEditRequest: db commit: %w", err)
+	}
+
+	return &edit_request, nil
+}
+
 func GetMonthRange(year, month int) (time.Time, time.Time) {
     start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
     end := start.AddDate(0, 1, 0) 
