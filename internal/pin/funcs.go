@@ -517,6 +517,8 @@ func PostEditRequest(
 	}
 	defer tx.Rollback()
 
+	println("input shift_id was ", input.ShiftId)
+
 	var edit_request model.EditRequest
 	err = tx.QueryRowContext(
 		ctx,

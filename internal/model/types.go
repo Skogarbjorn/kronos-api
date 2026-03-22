@@ -81,7 +81,7 @@ const (
 type EditRequest struct {
 	Id       int           `json:"id"`
 	ShiftId  int           `json:"shift_id"`
-	TaskId  *time.Time     `json:"task_id"`
+	TaskId  *int           `json:"task_id"`
 	StartTs *time.Time     `json:"start_ts"`
 	EndTs   *time.Time     `json:"end_ts"`
 	Reason   string        `json:"reason"`
