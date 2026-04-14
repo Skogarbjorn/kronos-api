@@ -78,7 +78,7 @@ func addPinAuth(
 	profile_id int,
 	pin string,
 ) error {
-	pinHash := hashPin(pin, os.Getenv("PIN_HASH_SECRET"))
+	pinHash := hashPin(pin, "todo!")
 	_, err := tx.ExecContext(
 		ctx,
 		`
@@ -94,8 +94,8 @@ func addPinAuth(
 	return nil
 }
 
-func hashPin(pin string, key string) string {
-	h := hmac.New(sha256.New, []byte(key))
+func hashPin(pin string, _ string) string {
+	h := hmac.New(sha256.New, []byte("todo!"))
 	h.Write([]byte(pin))
 	return hex.EncodeToString(h.Sum(nil))
 }
@@ -193,7 +193,7 @@ func ColdStartPin(
 		return nil, fmt.Errorf("AuthenticateProfile: query profile: %w", err)
 	}
 
-	inputPinHash := hashPin(input.Pin, os.Getenv("PIN_HASH_SECRET"))
+	inputPinHash := hashPin(input.Pin, "todo!")
 	if subtle.ConstantTimeCompare(
 		[]byte(pinHash),
 		[]byte(inputPinHash),
