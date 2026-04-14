@@ -44,6 +44,7 @@ func CreateRouter(db *sql.DB) http.Handler {
 		})
 
 		r.Route("/manage", func(r chi.Router) {
+			r.Use(auth.PasswordAuthMiddleware([]byte(os.Getenv("JWT_SECRET"))))
 			r.Post("/workspace",  manage.CreateWorkspaceHandler(db))
 			r.Post("/company",    manage.CreateCompanyHandler(db))
 			r.Post("/location",   manage.CreateLocationHandler(db))
