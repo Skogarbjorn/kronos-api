@@ -60,16 +60,18 @@ CREATE TABLE IF NOT EXISTS contract (
 
 CREATE TABLE IF NOT EXISTS employment (
     id SERIAL PRIMARY KEY,
-    profile_id INT,
+    profile_id INT NOT NULL,
     company_id INT,
+    workspace_id INT,
     contract_id INT,
-    role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'worker')),
+    role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'worker', 'owner')),
     start_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     end_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 year',
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
     FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE CASCADE,
+    FOREIGN KEY (workspace_id) REFERENCES workspace(id) ON DELETE CASCADE,
     FOREIGN KEY (contract_id) REFERENCES contract(id)
 );
 
@@ -89,7 +91,7 @@ CREATE TABLE IF NOT EXISTS task (
 CREATE TABLE IF NOT EXISTS shift (
     id SERIAL PRIMARY KEY,
     profile_id INT NOT NULL,
-    task_id INT NOT NULL,
+    task_id INT,
     start_ts TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_ts TIMESTAMPTZ,
     s_latitude DOUBLE PRECISION,
